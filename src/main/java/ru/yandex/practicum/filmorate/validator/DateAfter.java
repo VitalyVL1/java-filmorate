@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Constraint(validatedBy = DateAfterValidator.class)
 public @interface DateAfter {
-    String value() default "1895-12-28";
+    String minDate() default "1895-12-28";
     String message() default "Дата должна быть не раньше 28 декабря 1895" ;
 
     Class<?>[] groups() default { };

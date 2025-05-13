@@ -6,15 +6,15 @@ import jakarta.validation.ConstraintValidatorContext;
 import java.time.LocalDate;
 
 public class DateAfterValidator implements ConstraintValidator<DateAfter, LocalDate> {
-    private LocalDate minimumDate;
+    private LocalDate minDate;
 
     @Override
     public void initialize(DateAfter constraintAnnotation) {
-        minimumDate = LocalDate.parse(constraintAnnotation.value());
+        minDate = LocalDate.parse(constraintAnnotation.minDate());
     }
 
     @Override
     public boolean isValid(LocalDate localDate, ConstraintValidatorContext constraintValidatorContext) {
-        return localDate != null && localDate.isAfter(minimumDate);
+        return localDate != null && localDate.isAfter(minDate);
     }
 }
