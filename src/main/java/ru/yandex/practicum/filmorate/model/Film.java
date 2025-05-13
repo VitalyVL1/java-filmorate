@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.model;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.time.DurationMin;
 import ru.yandex.practicum.filmorate.validator.constraints.DateAfter;
@@ -10,6 +11,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 
 @Data
+@Slf4j
 public class Film {
     private final Long id;
 
