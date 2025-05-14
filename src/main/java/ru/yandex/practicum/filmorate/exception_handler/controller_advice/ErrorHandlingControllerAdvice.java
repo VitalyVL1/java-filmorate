@@ -57,6 +57,7 @@ public class ErrorHandlingControllerAdvice {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ResponseBody
     public ErrorResponse onNotFoundException(NotFoundException e) {
+        log.error(e.getMessage(), e);
         ErrorResponse errorResponse = new ErrorResponse();
         errorResponse.setMessage(e.getMessage());
         return errorResponse;
@@ -66,6 +67,7 @@ public class ErrorHandlingControllerAdvice {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public ErrorResponse onConditionsNotMetException(ConditionsNotMetException e) {
+        log.error(e.getMessage(), e);
         ErrorResponse errorResponse = new ErrorResponse();
         errorResponse.setMessage(e.getMessage());
         return errorResponse;
@@ -75,6 +77,7 @@ public class ErrorHandlingControllerAdvice {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public ErrorResponse onDuplicatedDataException(DuplicatedDataException e) {
+        log.error(e.getMessage(), e);
         ErrorResponse errorResponse = new ErrorResponse();
         errorResponse.setMessage(e.getMessage());
         return errorResponse;

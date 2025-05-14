@@ -23,11 +23,13 @@ public class UserController {
 
     @GetMapping
     public Collection<User> findAll() {
+        log.info("Find all users");
         return users.values();
     }
 
     @PostMapping
     public User create(@Valid @RequestBody User user, BindingResult bindingResult) {
+        log.debug("Create user: {}", user);
         if (isContainsEmail(user)) {
             throw new DuplicatedDataException("Этот имейл уже используется");
         }
@@ -41,6 +43,7 @@ public class UserController {
 
     @PutMapping
     public User update(@RequestBody User newUser, BindingResult bindingResult) {
+        log.debug("Update user: {}", newUser);
         if (newUser.getId() == null) {
             throw new ConditionsNotMetException("Id должен быть указан");
         }
@@ -51,15 +54,19 @@ public class UserController {
                 throw new DuplicatedDataException("Этот имейл уже используется");
             }
             if (newUser.getEmail() != null) {
+                log.info("Updating user with email: {}", newUser.getEmail());
                 oldUser.setEmail(newUser.getEmail());
             }
             if (newUser.getLogin() != null) {
+                log.info("Updating user with login: {}", newUser.getLogin());
                 oldUser.setLogin(newUser.getLogin());
             }
             if (newUser.getName() != null) {
+                log.info("Updating user with name: {}", newUser.getName());
                 oldUser.setName(newUser.getName());
             }
             if (newUser.getBirthday() != null) {
+                log.info("Updating user with birthday: {}", newUser.getBirthday());
                 oldUser.setBirthday(newUser.getBirthday());
             }
             users.put(oldUser.getId(), oldUser);
