@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @Data
 @Slf4j
 public class Film {
-    private final Long id;
+    private Long id;
 
     @NotBlank(message = "Название не может быть пустым")
     private String name;

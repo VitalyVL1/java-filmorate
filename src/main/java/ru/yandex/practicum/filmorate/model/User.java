@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @Data
 @Slf4j
 public class User {
-    private final Long id;
+    private Long id;
 
     @NotBlank(message = "Email не может быть пустым")
     @Email(message = "Введен некорректный email")

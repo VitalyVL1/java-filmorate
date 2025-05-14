@@ -14,8 +14,10 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = DateAfterValidator.class)
 public @interface DateAfter {
     String minDate() default "1895-12-28";
-    String message() default "Дата должна быть не раньше 28 декабря 1895" ;
 
-    Class<?>[] groups() default { };
-    Class<? extends Payload>[] payload() default { };
+    String message() default "Дата должна быть не раньше 28 декабря 1895";
+
+    Class<?>[] groups() default {};
+
+    Class<? extends Payload>[] payload() default {};
 }
