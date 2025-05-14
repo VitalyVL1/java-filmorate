@@ -31,6 +31,9 @@ public class UserController {
         if (isContainsEmail(user)) {
             throw new DuplicatedDataException("Этот имейл уже используется");
         }
+        if (user.getName() == null || user.getName().isBlank()) {
+            user.setName(user.getLogin()); //копируем значение login в name если name не задан
+        }
         user.setId(getNextId());
         users.put(user.getId(), user);
         return user;

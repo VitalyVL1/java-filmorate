@@ -9,7 +9,6 @@ import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,17 +39,16 @@ public class FilmController {
         }
         if (films.containsKey(newFilm.getId())) {
             Film oldFilm = films.get(newFilm.getId());
-            if (newFilm.getName() != null && !newFilm.getName().isBlank()) {
+            if (newFilm.getName() != null) {
                 oldFilm.setName(newFilm.getName());
             }
-            if (newFilm.getDescription() != null && !newFilm.getDescription().isBlank()) {
+            if (newFilm.getDescription() != null) {
                 oldFilm.setDescription(newFilm.getDescription());
             }
-            if (newFilm.getReleaseDate() != null &&
-                    !newFilm.getReleaseDate().isAfter(LocalDate.of(1895, 12, 28))) {
+            if (newFilm.getReleaseDate() != null) {
                 oldFilm.setReleaseDate(newFilm.getReleaseDate());
             }
-            if (newFilm.getDuration() != null && newFilm.getDuration().isPositive()) {
+            if (newFilm.getDuration() != null) {
                 oldFilm.setDuration(newFilm.getDuration());
             }
 

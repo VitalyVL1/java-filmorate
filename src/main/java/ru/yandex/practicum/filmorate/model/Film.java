@@ -4,10 +4,8 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.Length;
-import org.hibernate.validator.constraints.time.DurationMin;
 import ru.yandex.practicum.filmorate.validator.constraints.DateAfter;
 
-import java.time.Duration;
 import java.time.LocalDate;
 
 @Data
@@ -24,6 +22,6 @@ public class Film {
     @DateAfter
     private LocalDate releaseDate;
 
-    @DurationMin(message = "Продолжительность фильма должна быть положительным числом")
-    private Duration duration;
+    @Positive(message = "Продолжительность фильма должна быть положительным числом")
+    private Integer duration;
 }
