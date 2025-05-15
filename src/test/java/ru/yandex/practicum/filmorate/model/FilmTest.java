@@ -78,7 +78,7 @@ public class FilmTest {
     }
 
     @Test
-    void IncorrectReleaseDateTest() {
+    void incorrectReleaseDateTest() {
         Film film = new Film();
         film.setName(CORRECT_NAME);
         film.setDescription(CORRECT_DESCRIPTION);

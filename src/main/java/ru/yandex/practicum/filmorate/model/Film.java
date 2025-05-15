@@ -22,7 +22,7 @@ public class Film {
     @Length(max = 200, message = "Максимальная длина описания — 200 символов")
     private String description;
 
-    @DateTimeFormat(iso= DateTimeFormat.ISO.DATE)
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     @JsonFormat(pattern = "yyyy-MM-dd")
     @DateAfter
     private LocalDate releaseDate;
