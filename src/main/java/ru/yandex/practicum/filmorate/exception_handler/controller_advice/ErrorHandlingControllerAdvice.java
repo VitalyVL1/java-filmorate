@@ -15,6 +15,7 @@ import ru.yandex.practicum.filmorate.exception_handler.ErrorResponse;
 import ru.yandex.practicum.filmorate.exception_handler.ValidationErrorResponse;
 import ru.yandex.practicum.filmorate.exception_handler.Violation;
 
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -83,4 +84,14 @@ public class ErrorHandlingControllerAdvice {
         return errorResponse;
     }
 
+
+    @ExceptionHandler(DateTimeParseException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public ErrorResponse onDateTimeParseException(DateTimeParseException e) {
+        log.error(e.getMessage(), e);
+        ErrorResponse errorResponse = new ErrorResponse();
+        errorResponse.setMessage("Дата должна быть в формате yyyy-MM-dd, вами введено: " + e.getParsedString());
+        return errorResponse;
+    }
 }
