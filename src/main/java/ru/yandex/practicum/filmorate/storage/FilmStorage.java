@@ -13,5 +13,5 @@ public interface FilmStorage {
 
     Film update(Film newFilm);
 
-    Film deleteById(Long id);
+    Film removeById(Long id);
 }

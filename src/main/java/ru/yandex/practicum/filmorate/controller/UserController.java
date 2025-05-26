@@ -9,6 +9,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Collection;
@@ -20,10 +21,15 @@ import java.util.Collection;
 public class UserController {
 
     private final UserStorage userStorage;
+    private final UserService userService;
 
     @Autowired
-    public UserController(@Qualifier("inMemoryUserStorage") final UserStorage userStorage) {
+    public UserController(
+            @Qualifier("inMemoryUserStorage") final UserStorage userStorage,
+            final UserService userService
+    ) {
         this.userStorage = userStorage;
+        this.userService = userService;
     }
 
     @GetMapping
@@ -45,5 +51,33 @@ public class UserController {
     public User update(@RequestBody User newUser, BindingResult bindingResult) {
         log.debug("Update user: {}", newUser);
         return userStorage.update(newUser);
+    }
+
+    @PutMapping("/{id}/friends/{friendId}")
+    @ResponseStatus(HttpStatus.OK)
+    public User addFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        log.debug("Add friend {} to user: {}", friendId, id);
+        return userService.addFriend(id, friendId);
+    }
+
+    @DeleteMapping("/{id}/friends/{friendId}")
+    @ResponseStatus(HttpStatus.OK)
+    public User removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        log.debug("Delete friend {} from user: {}", friendId, id);
+        return userService.removeFriend(id, friendId);
+    }
+
+    @GetMapping("/{id}/friends")
+    @ResponseStatus(HttpStatus.OK)
+    public Collection<User> findFriends(@PathVariable Long id) {
+        log.debug("Find friends {}", id);
+        return userService.findFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    @ResponseStatus(HttpStatus.OK)
+    public Collection<User> findFriends(@PathVariable Long id, @PathVariable Long otherId) {
+        log.debug("Find common friends id = {} with otherId = {}", id, otherId);
+        return userService.findCommonFriends(id, otherId);
     }
 }
