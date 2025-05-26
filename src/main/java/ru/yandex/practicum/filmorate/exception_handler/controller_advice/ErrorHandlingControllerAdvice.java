@@ -4,10 +4,7 @@ import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -19,11 +16,10 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@ControllerAdvice
+@RestControllerAdvice
 @Slf4j
 public class ErrorHandlingControllerAdvice {
 
-    @ResponseBody
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ValidationErrorResponse onConstraintValidationException(ConstraintViolationException e) {
@@ -43,7 +39,6 @@ public class ErrorHandlingControllerAdvice {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ResponseBody
     public ValidationErrorResponse onMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         log.error(e.getMessage(), e);
 
@@ -56,7 +51,6 @@ public class ErrorHandlingControllerAdvice {
 
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    @ResponseBody
     public ErrorResponse onNotFoundException(NotFoundException e) {
         log.error(e.getMessage(), e);
         ErrorResponse errorResponse = new ErrorResponse();
@@ -66,7 +60,6 @@ public class ErrorHandlingControllerAdvice {
 
     @ExceptionHandler(ConditionsNotMetException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ResponseBody
     public ErrorResponse onConditionsNotMetException(ConditionsNotMetException e) {
         log.error(e.getMessage(), e);
         ErrorResponse errorResponse = new ErrorResponse();
@@ -76,7 +69,6 @@ public class ErrorHandlingControllerAdvice {
 
     @ExceptionHandler(DuplicatedDataException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ResponseBody
     public ErrorResponse onDuplicatedDataException(DuplicatedDataException e) {
         log.error(e.getMessage(), e);
         ErrorResponse errorResponse = new ErrorResponse();
@@ -87,7 +79,6 @@ public class ErrorHandlingControllerAdvice {
 
     @ExceptionHandler(DateTimeParseException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ResponseBody
     public ErrorResponse onDateTimeParseException(DateTimeParseException e) {
         log.error(e.getMessage(), e);
         ErrorResponse errorResponse = new ErrorResponse();
