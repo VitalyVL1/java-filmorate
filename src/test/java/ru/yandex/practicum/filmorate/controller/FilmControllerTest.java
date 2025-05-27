@@ -11,11 +11,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
@@ -100,6 +100,77 @@ public class FilmControllerTest {
     }
 
     @Test
+    @Order(3)
+    void getFilms() throws Exception {
+        MvcResult result = mockMvc.perform(get("/films")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        Film[] films = MAPPER.readValue(result.getResponse().getContentAsString(), Film[].class);
+
+        assertEquals(1, films.length);
+    }
+
+    @Test
+    @Order(4)
+    void addLike_Ok() throws Exception {
+        addUser(0);
+
+        mockMvc.perform(put("/films/1/like/1"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.likes", contains(1)));
+    }
+
+    @Test
+    @Order(5)
+    void deleteLike_Ok() throws Exception {
+        mockMvc.perform(delete("/films/1/like/1"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+        MvcResult result = mockMvc.perform(get("/films")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        Film[] films = MAPPER.readValue(result.getResponse().getContentAsString(), Film[].class);
+
+        assertFalse(films[0].getLikes().contains(1L));
+    }
+
+    @Test
+    void findPopular_Ok() throws Exception {
+        for (int i = 1; i <= 15; i++) {
+            addFilm(i);
+        }
+        for (int i = 1; i <= 15; i++) {
+            addUser(i);
+            if (i == 14) {
+                addLike(15, i);
+            } else {
+                addLike(i, i);
+            }
+        }
+
+
+        mockMvc.perform(get("/films/popular")).
+                andExpect(status().isOk()).
+                andExpect(content().contentType(MediaType.APPLICATION_JSON)).
+                andExpect(jsonPath("$", hasSize(10))).
+                andExpect(jsonPath("$[0].id", is(15)));
+
+        mockMvc.perform(get("/films/popular?count=5")).
+                andExpect(status().isOk()).
+                andExpect(content().contentType(MediaType.APPLICATION_JSON)).
+                andExpect(jsonPath("$", hasSize(5))).
+                andExpect(jsonPath("$[0].id", is(15)));
+    }
+
+    @Test
     void addFilm_blankName_badRequest() throws Exception {
         Film film = new Film();
         film.setName("");
@@ -180,16 +251,42 @@ public class FilmControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @Test
-    void getFilms() throws Exception {
-        MvcResult result = mockMvc.perform(get("/films")
-                        .accept(MediaType.APPLICATION_JSON))
+    private void addUser(int number) throws Exception {
+        User user = new User();
+        user.setName("user_name" + number);
+        user.setEmail(String.format("user%d@email.com", number));
+        user.setBirthday(LocalDate.of(1900, 1, 1));
+        user.setLogin("user_login" + number);
+
+        String userJson = MAPPER.writeValueAsString(user);
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson))
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    private void addFilm(int number) throws Exception {
+        Film film = new Film();
+        film.setName("Film_name" + number);
+        film.setDescription("Film_description" + number);
+        film.setReleaseDate(CORRECT_RELEASE_DATE);
+        film.setDuration(CORRECT_DURATION);
+
+        String userJson = MAPPER.writeValueAsString(film);
+
+        mockMvc.perform(post("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson))
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    private void addLike(int film, int user) throws Exception {
+        String URI = String.format("/films/%d/like/%d", film, user);
+        mockMvc.perform(put(URI))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        Film[] films = MAPPER.readValue(result.getResponse().getContentAsString(), Film[].class);
-
-        assertEquals(1, films.length);
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 }

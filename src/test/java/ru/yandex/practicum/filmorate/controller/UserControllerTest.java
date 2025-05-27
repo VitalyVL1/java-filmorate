@@ -11,10 +11,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import ru.yandex.practicum.filmorate.model.User;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
@@ -46,7 +45,7 @@ public class UserControllerTest {
 
     @Test
     @Order(1)
-    void addUser_allFieldsOk() throws Exception {
+    void addUser_allFields_Ok() throws Exception {
         User user = new User();
         user.setName(CORRECT_NAME);
         user.setEmail(CORRECT_EMAIL);
@@ -73,7 +72,7 @@ public class UserControllerTest {
 
     @Test
     @Order(2)
-    void updateUser_allFieldsOk() throws Exception {
+    void updateUser_allFields_Ok() throws Exception {
         User user = new User();
         user.setId(1L);
         user.setName(UPDATE_NAME);
@@ -100,7 +99,7 @@ public class UserControllerTest {
 
     @Test
     @Order(3)
-    void addUser_noName() throws Exception {
+    void addUser_noName_OK() throws Exception {
         User user = new User();
         user.setEmail(CORRECT_EMAIL);
         user.setBirthday(CORRECT_BIRTHDAY);
@@ -125,7 +124,7 @@ public class UserControllerTest {
 
     @Test
     @Order(4)
-    void getUsers() throws Exception {
+    void getUsers_OK() throws Exception {
         MvcResult result = mockMvc.perform(get("/users")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -135,6 +134,58 @@ public class UserControllerTest {
         User[] users = MAPPER.readValue(result.getResponse().getContentAsString(), User[].class);
 
         assertEquals(2, users.length);
+    }
+
+    @Test
+    @Order(5)
+    void addFriend_OK() throws Exception {
+        mockMvc.perform(put("/users/1/friends/2"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.friends",contains(2)));
+
+        MvcResult result = mockMvc.perform(get("/users")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        User[] users = MAPPER.readValue(result.getResponse().getContentAsString(), User[].class);
+
+        assertTrue(users[0].getFriends().contains(2L));
+        assertTrue(users[1].getFriends().contains(1L));
+    }
+
+    @Test
+    @Order(6)
+    void findFriends_OK() throws Exception {
+        MvcResult result = mockMvc.perform(get("/users/1/friends")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        User[] friends = MAPPER.readValue(result.getResponse().getContentAsString(), User[].class);
+
+        assertEquals(2, friends[0].getId());
+    }
+
+    @Test
+    @Order(7)
+    void deleteFriend_OK() throws Exception {
+        mockMvc.perform(delete("/users/1/friends/2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.friends", empty()));
+
+        MvcResult result = mockMvc.perform(get("/users")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        User[] users = MAPPER.readValue(result.getResponse().getContentAsString(), User[].class);
+
+        assertFalse(users[0].getFriends().contains(users[1].getId()));
     }
 
     @Test
@@ -231,6 +282,19 @@ public class UserControllerTest {
         mockMvc.perform(put("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void addUnknownFriend_badRequest() throws Exception {
+        mockMvc.perform(put("/users/1/friends/1001"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void findUnknownFriends_notFound() throws Exception {
+        mockMvc.perform(get("/users/1000/friends")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 }
