@@ -24,18 +24,18 @@ import java.time.LocalDate;
 @ComponentScan(basePackages = "ru.yandex.practicum.filmorate")
 public class UserControllerTest {
 
-    private static final String CORRECT_EMAIL = "ivan@gmail.com";
-    private static final String CORRECT_LOGIN = "Vanya";
-    private static final String CORRECT_NAME = "Ivan";
+    private static final String CORRECT_EMAIL = "user1@email.com";
+    private static final String CORRECT_LOGIN = "User_login1";
+    private static final String CORRECT_NAME = "User_name1";
     private static final LocalDate CORRECT_BIRTHDAY = LocalDate.of(1900, 1, 1);
 
-    private static final String UPDATE_EMAIL = "updateivan@gmail.com";
-    private static final String UPDATE_LOGIN = "updateVanya";
-    private static final String UPDATE_NAME = "updateIvan";
+    private static final String UPDATE_EMAIL = "update_user1@email.com";
+    private static final String UPDATE_LOGIN = "update_User_login1";
+    private static final String UPDATE_NAME = "update_User_name1";
     private static final LocalDate UPDATE_BIRTHDAY = LocalDate.of(2000, 1, 1);
 
     private static final String INCORRECT_EMAIL = "1234abc";
-    private static final String INCORRECT_LOGIN = "Van ya";
+    private static final String INCORRECT_LOGIN = "Us er";
     private static final LocalDate INCORRECT_BIRTHDAY = LocalDate.of(3000, 1, 1);
 
     private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new JavaTimeModule());
@@ -142,7 +142,7 @@ public class UserControllerTest {
         mockMvc.perform(put("/users/1/friends/2"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.friends",contains(2)));
+                .andExpect(jsonPath("$.friends", contains(2)));
 
         MvcResult result = mockMvc.perform(get("/users")
                         .accept(MediaType.APPLICATION_JSON))
@@ -186,6 +186,35 @@ public class UserControllerTest {
         User[] users = MAPPER.readValue(result.getResponse().getContentAsString(), User[].class);
 
         assertFalse(users[0].getFriends().contains(users[1].getId()));
+    }
+
+    @Test
+    void findCommonFriends_OK() throws Exception {
+        User user = new User();
+        user.setName("user_name");
+        user.setEmail("user@email.com");
+        user.setBirthday(LocalDate.of(1900, 1, 1));
+        user.setLogin("user_login");
+
+        String userJson = MAPPER.writeValueAsString(user);
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson))
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+        mockMvc.perform(put("/users/1/friends/2"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(put("/users/3/friends/2"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/users/3/friends/common/1")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].friends", containsInAnyOrder(1, 3)));
     }
 
     @Test
