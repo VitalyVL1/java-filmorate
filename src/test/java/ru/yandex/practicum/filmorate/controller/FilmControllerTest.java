@@ -157,17 +157,17 @@ public class FilmControllerTest {
         }
 
 
-        mockMvc.perform(get("/films/popular")).
-                andExpect(status().isOk()).
-                andExpect(content().contentType(MediaType.APPLICATION_JSON)).
-                andExpect(jsonPath("$", hasSize(10))).
-                andExpect(jsonPath("$[0].id", is(15)));
+        mockMvc.perform(get("/films/popular"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(10)))
+                .andExpect(jsonPath("$[0].id", is(15)));
 
-        mockMvc.perform(get("/films/popular?count=5")).
-                andExpect(status().isOk()).
-                andExpect(content().contentType(MediaType.APPLICATION_JSON)).
-                andExpect(jsonPath("$", hasSize(5))).
-                andExpect(jsonPath("$[0].id", is(15)));
+        mockMvc.perform(get("/films/popular?count=5"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(5)))
+                .andExpect(jsonPath("$[0].id", is(15)));
     }
 
     @Test
@@ -284,8 +284,8 @@ public class FilmControllerTest {
     }
 
     private void addLike(int film, int user) throws Exception {
-        String URI = String.format("/films/%d/like/%d", film, user);
-        mockMvc.perform(put(URI))
+        String uri = String.format("/films/%d/like/%d", film, user);
+        mockMvc.perform(put(uri))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }

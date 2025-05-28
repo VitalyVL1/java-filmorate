@@ -90,7 +90,7 @@ public class FilmService {
     private long getNextId() {
         long currentMaxId = filmStorage.findAll()
                 .stream()
-                .mapToLong(film -> film.getId())
+                .mapToLong(Film::getId)
                 .max()
                 .orElse(0);
         return ++currentMaxId;

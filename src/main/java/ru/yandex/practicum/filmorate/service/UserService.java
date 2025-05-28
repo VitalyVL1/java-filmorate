@@ -125,7 +125,7 @@ public class UserService {
     private long getNextId() {
         long currentMaxId = userStorage.findAll()
                 .stream()
-                .mapToLong(user -> user.getId())
+                .mapToLong(User::getId)
                 .max()
                 .orElse(0);
         return ++currentMaxId;
