@@ -53,36 +53,27 @@ public class ErrorHandlingController {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse onNotFoundException(NotFoundException e) {
         log.error(e.getMessage(), e);
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setMessage(e.getMessage());
-        return errorResponse;
+        return new ErrorResponse(e.getMessage());
     }
 
     @ExceptionHandler(ConditionsNotMetException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse onConditionsNotMetException(ConditionsNotMetException e) {
         log.error(e.getMessage(), e);
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setMessage(e.getMessage());
-        return errorResponse;
+        return new ErrorResponse(e.getMessage());
     }
 
     @ExceptionHandler(DuplicatedDataException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse onDuplicatedDataException(DuplicatedDataException e) {
         log.error(e.getMessage(), e);
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setMessage(e.getMessage());
-        return errorResponse;
+        return new ErrorResponse(e.getMessage());
     }
-
 
     @ExceptionHandler(DateTimeParseException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse onDateTimeParseException(DateTimeParseException e) {
         log.error(e.getMessage(), e);
-        ErrorResponse errorResponse = new ErrorResponse();
-        errorResponse.setMessage("Дата должна быть в формате yyyy-MM-dd, вами введено: " + e.getParsedString());
-        return errorResponse;
+        return new ErrorResponse("Дата должна быть в формате yyyy-MM-dd, вами введено: " + e.getParsedString());
     }
 }

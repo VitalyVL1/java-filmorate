@@ -77,7 +77,6 @@ public class UserService {
                 );
     }
 
-
     public User addFriend(Long id, Long friendId) {
         User user = getUser(id);
         User friend = getUser(friendId);
