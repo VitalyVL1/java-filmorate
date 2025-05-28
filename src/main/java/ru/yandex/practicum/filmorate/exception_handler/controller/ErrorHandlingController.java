@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.exception_handler.controller_advice;
+package ru.yandex.practicum.filmorate.exception_handler.controller;
 
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 @Slf4j
-public class ErrorHandlingControllerAdvice {
+public class ErrorHandlingController {
 
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
