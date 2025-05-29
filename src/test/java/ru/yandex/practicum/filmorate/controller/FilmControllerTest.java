@@ -126,7 +126,7 @@ public class FilmControllerTest {
 
     @Test
     @Order(5)
-    void deleteLike_Ok() throws Exception {
+    void deleteLike_ok() throws Exception {
         mockMvc.perform(delete("/films/1/like/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
@@ -143,7 +143,16 @@ public class FilmControllerTest {
     }
 
     @Test
-    void findPopular_Ok() throws Exception {
+    void getFilmById_ok() throws Exception {
+        mockMvc.perform(get("/films/1")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", is(1)));
+    }
+
+    @Test
+    void findPopular_ok() throws Exception {
         for (int i = 1; i <= 15; i++) {
             addFilm(i);
         }
@@ -155,7 +164,6 @@ public class FilmControllerTest {
                 addLike(i, i);
             }
         }
-
 
         mockMvc.perform(get("/films/popular"))
                 .andExpect(status().isOk())
@@ -248,6 +256,29 @@ public class FilmControllerTest {
         mockMvc.perform(put("/films")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void updateFilm_noId_badRequest() throws Exception {
+        Film film = new Film();
+        film.setName(CORRECT_NAME);
+        film.setDescription(CORRECT_DESCRIPTION);
+        film.setReleaseDate(CORRECT_RELEASE_DATE);
+        film.setDuration(CORRECT_DURATION);
+
+        String userJson = MAPPER.writeValueAsString(film);
+
+        mockMvc.perform(put("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getFilmById_notFound() throws Exception {
+        mockMvc.perform(get("/films/1001")
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
 

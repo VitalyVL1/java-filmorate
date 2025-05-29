@@ -2,9 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
@@ -20,7 +18,6 @@ public class UserController {
 
     private final UserService userService;
 
-    @Autowired
     public UserController(final UserService userService) {
         this.userService = userService;
     }
@@ -32,16 +29,23 @@ public class UserController {
         return userService.findAll();
     }
 
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public User findById(@PathVariable Long id) {
+        log.debug("Find user by id {}", id);
+        return userService.findById(id);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public User create(@Valid @RequestBody User user, BindingResult bindingResult) {
+    public User create(@Valid @RequestBody User user) {
         log.debug("Create user: {}", user);
         return userService.create(user);
     }
 
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
-    public User update(@RequestBody User newUser, BindingResult bindingResult) {
+    public User update(@RequestBody User newUser) {
         log.debug("Update user: {}", newUser);
         return userService.update(newUser);
     }

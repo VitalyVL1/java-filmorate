@@ -61,12 +61,4 @@ public class InMemoryUserStorage implements UserStorage {
     public Optional<User> removeById(Long id) {
         return Optional.ofNullable(users.remove(id));
     }
-
-
-    @Override
-    public boolean containsEmail(User user) {
-        return users.values().stream()
-                .map(User::getEmail)
-                .anyMatch(user.getEmail()::equals);
-    }
 }

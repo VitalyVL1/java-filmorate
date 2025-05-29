@@ -15,6 +15,4 @@ public interface UserStorage {
     Optional<User> update(User newUser);
 
     Optional<User> removeById(Long id);
-
-    boolean containsEmail(User user);
 }

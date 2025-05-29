@@ -1,7 +1,5 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
@@ -16,13 +14,12 @@ import java.util.Set;
 public class UserService {
     private final UserStorage userStorage;
 
-    @Autowired
-    public UserService(@Qualifier("inMemoryUserStorage") UserStorage userStorage) {
+    public UserService(UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
     public User create(User user) {
-        if (userStorage.containsEmail(user)) {
+        if (containsEmail(user)) {
             throw new DuplicatedDataException("Этот имейл уже используется");
         }
         if (user.getName() == null || user.getName().isBlank()) {
@@ -56,7 +53,7 @@ public class UserService {
 
         if (newUser.getEmail() != null &&
                 !newUser.getEmail().equals(oldUser.getEmail()) &&
-                userStorage.containsEmail(newUser)) {
+                containsEmail(newUser)) {
             throw new DuplicatedDataException("Этот имейл уже используется");
         }
 
@@ -135,5 +132,11 @@ public class UserService {
                 .orElseThrow(
                         () -> new NotFoundException("Пользователь с id = " + id + " не найден")
                 );
+    }
+
+    private boolean containsEmail(User user) {
+        return userStorage.findAll().stream()
+                .map(User::getEmail)
+                .anyMatch(user.getEmail()::equals);
     }
 }

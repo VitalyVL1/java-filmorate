@@ -2,9 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -19,7 +17,6 @@ import java.util.Collection;
 public class FilmController {
     private final FilmService filmService;
 
-    @Autowired
     public FilmController(final FilmService filmService) {
         this.filmService = filmService;
     }
@@ -31,16 +28,23 @@ public class FilmController {
         return filmService.findAll();
     }
 
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public Film findById(@PathVariable Long id) {
+        log.debug("Find film by id {}", id);
+        return filmService.findById(id);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Film create(@Valid @RequestBody Film film, BindingResult bindingResult) {
+    public Film create(@Valid @RequestBody Film film) {
         log.debug("Create film: {}", film);
         return filmService.create(film);
     }
 
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
-    public Film update(@Valid @RequestBody Film newFilm, BindingResult bindingResult) {
+    public Film update(@Valid @RequestBody Film newFilm) {
         log.debug("Update film: {}", newFilm);
         return filmService.update(newFilm);
     }

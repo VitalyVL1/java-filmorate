@@ -45,7 +45,7 @@ public class UserControllerTest {
 
     @Test
     @Order(1)
-    void addUser_allFields_Ok() throws Exception {
+    void addUser_allFields_ok() throws Exception {
         User user = new User();
         user.setName(CORRECT_NAME);
         user.setEmail(CORRECT_EMAIL);
@@ -72,7 +72,7 @@ public class UserControllerTest {
 
     @Test
     @Order(2)
-    void updateUser_allFields_Ok() throws Exception {
+    void updateUser_allFields_ok() throws Exception {
         User user = new User();
         user.setId(1L);
         user.setName(UPDATE_NAME);
@@ -99,7 +99,7 @@ public class UserControllerTest {
 
     @Test
     @Order(3)
-    void addUser_noName_OK() throws Exception {
+    void addUser_noName_ok() throws Exception {
         User user = new User();
         user.setEmail(CORRECT_EMAIL);
         user.setBirthday(CORRECT_BIRTHDAY);
@@ -124,7 +124,7 @@ public class UserControllerTest {
 
     @Test
     @Order(4)
-    void getUsers_OK() throws Exception {
+    void getUsers_ok() throws Exception {
         MvcResult result = mockMvc.perform(get("/users")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -138,7 +138,7 @@ public class UserControllerTest {
 
     @Test
     @Order(5)
-    void addFriend_OK() throws Exception {
+    void addFriend_ok() throws Exception {
         mockMvc.perform(put("/users/1/friends/2"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -158,7 +158,7 @@ public class UserControllerTest {
 
     @Test
     @Order(6)
-    void findFriends_OK() throws Exception {
+    void findFriends_ok() throws Exception {
         MvcResult result = mockMvc.perform(get("/users/1/friends")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -172,7 +172,7 @@ public class UserControllerTest {
 
     @Test
     @Order(7)
-    void deleteFriend_OK() throws Exception {
+    void deleteFriend_ok() throws Exception {
         mockMvc.perform(delete("/users/1/friends/2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.friends", empty()));
@@ -189,7 +189,16 @@ public class UserControllerTest {
     }
 
     @Test
-    void findCommonFriends_OK() throws Exception {
+    void getUserById_ok() throws Exception {
+        mockMvc.perform(get("/users/1")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", is(1)));
+    }
+
+    @Test
+    void findCommonFriends_ok() throws Exception {
         User user = new User();
         user.setName("user_name");
         user.setEmail("user@email.com");
@@ -315,6 +324,22 @@ public class UserControllerTest {
     }
 
     @Test
+    void updateUser_noId_badRequest() throws Exception {
+        User user = new User();
+        user.setName(UPDATE_NAME);
+        user.setEmail("ivan1000@gmail.com");
+        user.setBirthday(UPDATE_BIRTHDAY);
+        user.setLogin(UPDATE_LOGIN);
+
+        String userJson = MAPPER.writeValueAsString(user);
+
+        mockMvc.perform(put("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void addUnknownFriend_badRequest() throws Exception {
         mockMvc.perform(put("/users/1/friends/1001"))
                 .andExpect(status().isNotFound());
@@ -325,5 +350,43 @@ public class UserControllerTest {
         mockMvc.perform(get("/users/1000/friends")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getUserById_notFound() throws Exception {
+        mockMvc.perform(get("/users/1001")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void addUser_duplicatedEmail_badRequest() throws Exception {
+        User user = new User();
+        user.setEmail(CORRECT_EMAIL);
+        user.setBirthday(CORRECT_BIRTHDAY);
+        user.setLogin(CORRECT_LOGIN);
+
+        String userJson = MAPPER.writeValueAsString(user);
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateUser_duplicatedEmail_badRequest() throws Exception {
+        User user = new User();
+        user.setId(1L);
+        user.setEmail(CORRECT_EMAIL);
+        user.setBirthday(CORRECT_BIRTHDAY);
+        user.setLogin(CORRECT_LOGIN);
+
+        String userJson = MAPPER.writeValueAsString(user);
+
+        mockMvc.perform(put("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson))
+                .andExpect(status().isBadRequest());
     }
 }
