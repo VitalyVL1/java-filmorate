@@ -10,11 +10,14 @@ import org.springframework.format.annotation.DateTimeFormat;
 import ru.yandex.practicum.filmorate.validator.constraints.DateAfter;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @Slf4j
 public class Film {
     private Long id;
+    private final Set<Long> likes = new HashSet<>();
 
     @NotBlank(message = "Название не может быть пустым")
     private String name;
