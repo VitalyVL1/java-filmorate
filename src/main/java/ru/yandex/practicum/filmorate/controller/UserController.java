@@ -2,91 +2,79 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.BindingResult;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
-import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @Validated
 @Slf4j
 @RequestMapping("/users")
 public class UserController {
-    private final Map<Long, User> users = new HashMap<>();
+
+    private final UserService userService;
+
+    public UserController(final UserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping
+    @ResponseStatus(HttpStatus.OK)
     public Collection<User> findAll() {
-        log.info("Find all users");
-        return users.values();
+        log.debug("Find all users");
+        return userService.findAll();
+    }
+
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public User findById(@PathVariable Long id) {
+        log.debug("Find user by id {}", id);
+        return userService.findById(id);
     }
 
     @PostMapping
-    public User create(@Valid @RequestBody User user, BindingResult bindingResult) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public User create(@Valid @RequestBody User user) {
         log.debug("Create user: {}", user);
-        if (isContainsEmail(user)) {
-            throw new DuplicatedDataException("Этот имейл уже используется");
-        }
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin()); //копируем значение login в name если name не задан
-        }
-        user.setId(getNextId());
-        users.put(user.getId(), user);
-        return user;
+        return userService.create(user);
     }
 
     @PutMapping
-    public User update(@RequestBody User newUser, BindingResult bindingResult) {
+    @ResponseStatus(HttpStatus.OK)
+    public User update(@RequestBody User newUser) {
         log.debug("Update user: {}", newUser);
-        if (newUser.getId() == null) {
-            throw new ConditionsNotMetException("Id должен быть указан");
-        }
-        if (users.containsKey(newUser.getId())) {
-            User oldUser = users.remove(newUser.getId());
-            if (newUser.getEmail() != null && isContainsEmail(newUser)) {
-                users.put(oldUser.getId(), oldUser); //возвращаем пользователя обратно перед тем как выбросить исключение
-                throw new DuplicatedDataException("Этот имейл уже используется");
-            }
-            if (newUser.getEmail() != null) {
-                log.info("Updating user with email: {}", newUser.getEmail());
-                oldUser.setEmail(newUser.getEmail());
-            }
-            if (newUser.getLogin() != null) {
-                log.info("Updating user with login: {}", newUser.getLogin());
-                oldUser.setLogin(newUser.getLogin());
-            }
-            if (newUser.getName() != null) {
-                log.info("Updating user with name: {}", newUser.getName());
-                oldUser.setName(newUser.getName());
-            }
-            if (newUser.getBirthday() != null) {
-                log.info("Updating user with birthday: {}", newUser.getBirthday());
-                oldUser.setBirthday(newUser.getBirthday());
-            }
-            users.put(oldUser.getId(), oldUser);
-            return oldUser;
-        }
-        throw new NotFoundException("Пользователь с id = " + newUser.getId() + " не найден");
+        return userService.update(newUser);
     }
 
-    private long getNextId() {
-        long currentMaxId = users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
+    @PutMapping("/{id}/friends/{friendId}")
+    @ResponseStatus(HttpStatus.OK)
+    public User addFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        log.debug("Add friend {} to user: {}", friendId, id);
+        return userService.addFriend(id, friendId);
     }
 
-    private boolean isContainsEmail(User user) {
-        return users.values().stream()
-                .map(User::getEmail)
-                .anyMatch(user.getEmail()::equals);
+    @DeleteMapping("/{id}/friends/{friendId}")
+    @ResponseStatus(HttpStatus.OK)
+    public User removeFriend(@PathVariable Long id, @PathVariable Long friendId) {
+        log.debug("Delete friend {} from user: {}", friendId, id);
+        return userService.removeFriend(id, friendId);
+    }
+
+    @GetMapping("/{id}/friends")
+    @ResponseStatus(HttpStatus.OK)
+    public Collection<User> findFriends(@PathVariable Long id) {
+        log.debug("Find friends {}", id);
+        return userService.findFriends(id);
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    @ResponseStatus(HttpStatus.OK)
+    public Collection<User> findCommonFriends(@PathVariable Long id, @PathVariable Long otherId) {
+        log.debug("Find common friends id = {} with otherId = {}", id, otherId);
+        return userService.findCommonFriends(id, otherId);
     }
 }
