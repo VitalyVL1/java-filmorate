@@ -13,6 +13,7 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User create(User user) {
+        user.setId(getNextId());
         users.put(user.getId(), user);
         return user;
     }
@@ -60,5 +61,13 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public Optional<User> removeById(Long id) {
         return Optional.ofNullable(users.remove(id));
+    }
+
+    private long getNextId() {
+        long currentMaxId = users.keySet()
+                .stream()
+                .reduce(Long::max)
+                .orElse(0L);
+        return ++currentMaxId;
     }
 }

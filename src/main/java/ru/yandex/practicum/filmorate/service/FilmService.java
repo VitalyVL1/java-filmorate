@@ -27,7 +27,6 @@ public class FilmService {
     }
 
     public Film create(Film film) {
-        film.setId(getNextId());
         return filmStorage.create(film);
     }
 
@@ -61,7 +60,6 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundException("Фильм с id = " + id + " не найден"));
     }
 
-
     public Film addLike(Long id, Long userId) {
         Film film = getFilm(id);
         User user = getUser(userId);
@@ -82,15 +80,6 @@ public class FilmService {
                 .sorted(comparator.reversed())
                 .limit(count)
                 .toList();
-    }
-
-    private long getNextId() {
-        long currentMaxId = filmStorage.findAll()
-                .stream()
-                .mapToLong(Film::getId)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
     }
 
     private Film getFilm(Long id) {

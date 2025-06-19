@@ -4,9 +4,11 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.FriendStatus;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 
@@ -25,8 +27,6 @@ public class UserService {
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin()); //копируем значение login в name если name не задан
         }
-
-        user.setId(getNextId());
 
         return userStorage.create(user);
     }
@@ -74,15 +74,18 @@ public class UserService {
                 );
     }
 
-    public User addFriend(Long id, Long friendId) {
+    public User addFriend(Long id, Long friendId, String status) {
         User user = getUser(id);
         User friend = getUser(friendId);
+        FriendStatus friendStatus = checkStatus(status);
 
-        user.getFriends().add(friendId);
-        friend.getFriends().add(id);
-
+        user.getFriends().put(friendId, friendStatus);
         userStorage.update(user);
-        userStorage.update(friend);
+
+        if (friendStatus.equals(FriendStatus.CONFIRMED)) {
+            friend.getFriends().put(id, FriendStatus.CONFIRMED);
+            userStorage.update(friend);
+        }
 
         return user;
     }
@@ -103,14 +106,15 @@ public class UserService {
     public Collection<User> findFriends(Long id) {
         return getUser(id)
                 .getFriends()
+                .keySet()
                 .stream()
                 .map(this::getUser)
                 .toList();
     }
 
     public Collection<User> findCommonFriends(Long id, Long otherId) {
-        Set<Long> userFriends = getUser(id).getFriends();
-        Set<Long> otherUser = getUser(otherId).getFriends();
+        Set<Long> userFriends = getUser(id).getFriends().keySet();
+        Set<Long> otherUser = getUser(otherId).getFriends().keySet();
 
         return userFriends.stream()
                 .filter(otherUser::contains)
@@ -118,14 +122,6 @@ public class UserService {
                 .toList();
     }
 
-    private long getNextId() {
-        long currentMaxId = userStorage.findAll()
-                .stream()
-                .mapToLong(User::getId)
-                .max()
-                .orElse(0);
-        return ++currentMaxId;
-    }
 
     private User getUser(Long id) {
         return userStorage.findById(id)
@@ -138,5 +134,13 @@ public class UserService {
         return userStorage.findAll().stream()
                 .map(User::getEmail)
                 .anyMatch(user.getEmail()::equals);
+    }
+
+    private FriendStatus checkStatus(String status) {
+        try {
+            return FriendStatus.valueOf(status.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new ConditionsNotMetException("Статус должен быть: " + Arrays.toString(FriendStatus.values()));
+        }
     }
 }

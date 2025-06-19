@@ -18,6 +18,8 @@ import java.util.Set;
 public class Film {
     private Long id;
     private final Set<Long> likes = new HashSet<>();
+    private final Set<Genre> genres = new HashSet<>();
+    private Rating rating;
 
     @NotBlank(message = "Название не может быть пустым")
     private String name;

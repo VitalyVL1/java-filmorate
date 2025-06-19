@@ -12,14 +12,14 @@ import org.hibernate.validator.constraints.Length;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 @Data
 @Slf4j
 public class User {
     private Long id;
-    private final Set<Long> friends = new HashSet<>();
+    private final Map<Long, FriendStatus> friends = new HashMap<>();
 
     @NotBlank(message = "Email не может быть пустым")
     @Email(message = "Введен некорректный email")

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
@@ -19,6 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.time.LocalDate;
 
+@AutoConfigureTestDatabase
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @WebMvcTest(UserController.class)
 @ComponentScan(basePackages = "ru.yandex.practicum.filmorate")
@@ -138,11 +140,11 @@ public class UserControllerTest {
 
     @Test
     @Order(5)
-    void addFriend_ok() throws Exception {
-        mockMvc.perform(put("/users/1/friends/2"))
+    void addFriend_status_confirmed_ok() throws Exception {
+        mockMvc.perform(put("/users/1/friends/2?status=CONFIRMED"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.friends", contains(2)));
+                .andExpect(jsonPath("$.friends", hasKey("2")));
 
         MvcResult result = mockMvc.perform(get("/users")
                         .accept(MediaType.APPLICATION_JSON))
@@ -152,8 +154,8 @@ public class UserControllerTest {
 
         User[] users = MAPPER.readValue(result.getResponse().getContentAsString(), User[].class);
 
-        assertTrue(users[0].getFriends().contains(2L));
-        assertTrue(users[1].getFriends().contains(1L));
+        assertTrue(users[0].getFriends().keySet().contains(2L));
+        assertTrue(users[1].getFriends().keySet().contains(1L));
     }
 
     @Test
@@ -175,7 +177,7 @@ public class UserControllerTest {
     void deleteFriend_ok() throws Exception {
         mockMvc.perform(delete("/users/1/friends/2"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.friends", empty()));
+                .andExpect(jsonPath("$.friends", anEmptyMap()));
 
         MvcResult result = mockMvc.perform(get("/users")
                         .accept(MediaType.APPLICATION_JSON))
@@ -185,7 +187,7 @@ public class UserControllerTest {
 
         User[] users = MAPPER.readValue(result.getResponse().getContentAsString(), User[].class);
 
-        assertFalse(users[0].getFriends().contains(users[1].getId()));
+        assertFalse(users[0].getFriends().keySet().contains(users[1].getId()));
     }
 
     @Test
@@ -213,17 +215,18 @@ public class UserControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
-        mockMvc.perform(put("/users/1/friends/2"))
+        mockMvc.perform(put("/users/1/friends/2?status=CONFIRMED"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(put("/users/3/friends/2"))
+        mockMvc.perform(put("/users/3/friends/2?status=CONFIRMED"))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/users/3/friends/common/1")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[0].friends", containsInAnyOrder(1, 3)));
+                .andExpect(jsonPath("$[0].friends", hasKey("1")))
+                .andExpect(jsonPath("$[0].friends", hasKey("3")));
     }
 
     @Test

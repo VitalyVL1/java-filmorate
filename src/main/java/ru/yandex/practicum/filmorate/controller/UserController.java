@@ -52,9 +52,13 @@ public class UserController {
 
     @PutMapping("/{id}/friends/{friendId}")
     @ResponseStatus(HttpStatus.OK)
-    public User addFriend(@PathVariable Long id, @PathVariable Long friendId) {
-        log.debug("Add friend {} to user: {}", friendId, id);
-        return userService.addFriend(id, friendId);
+    public User addFriend(
+            @PathVariable Long id,
+            @PathVariable Long friendId,
+            @RequestParam(value = "status", required = false, defaultValue = "UNCONFIRMED") String status
+    ) {
+        log.debug("Add friend {} to user: {}, status {}", friendId, id, status);
+        return userService.addFriend(id, friendId, status);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")

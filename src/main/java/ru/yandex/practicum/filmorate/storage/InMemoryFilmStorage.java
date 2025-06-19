@@ -13,6 +13,7 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film create(Film film) {
+        film.setId(getNextId());
         films.put(film.getId(), film);
         return films.get(film.getId());
     }
@@ -60,5 +61,13 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Optional<Film> removeById(Long id) {
         return Optional.ofNullable(films.remove(id));
+    }
+
+    private long getNextId() {
+        long currentMaxId = films.keySet()
+                .stream()
+                .reduce(Long::max)
+                .orElse(0L);
+        return ++currentMaxId;
     }
 }
