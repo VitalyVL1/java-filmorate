@@ -154,8 +154,8 @@ public class UserControllerTest {
 
         User[] users = MAPPER.readValue(result.getResponse().getContentAsString(), User[].class);
 
-        assertTrue(users[0].getFriends().keySet().contains(2L));
-        assertTrue(users[1].getFriends().keySet().contains(1L));
+        assertTrue(users[0].getFriends().containsKey(2L));
+        assertTrue(users[1].getFriends().containsKey(1L));
     }
 
     @Test
@@ -187,7 +187,7 @@ public class UserControllerTest {
 
         User[] users = MAPPER.readValue(result.getResponse().getContentAsString(), User[].class);
 
-        assertFalse(users[0].getFriends().keySet().contains(users[1].getId()));
+        assertFalse(users[0].getFriends().containsKey(users[1].getId()));
     }
 
     @Test
