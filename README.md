@@ -3,7 +3,7 @@
 ### ER-Диаграмма
 
 ![Filmorate.png](Filmorate.png)
-SQL-схема: [Filmorate(PsgSQL).sql](src%2Fmain%2Fresources%2FFilmorate%28PsgSQL%29.sql)
+SQL-схема: [schema.sql](src%2Fmain%2Fresources%2Fschema.sql)
 
 ### Описание таблиц:
 
