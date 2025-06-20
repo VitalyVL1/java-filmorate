@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
@@ -10,13 +11,12 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Set;
 
 @Service
 public class UserService {
     private final UserStorage userStorage;
 
-    public UserService(UserStorage userStorage) {
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
@@ -75,53 +75,24 @@ public class UserService {
     }
 
     public User addFriend(Long id, Long friendId, String status) {
-        User user = getUser(id);
-        User friend = getUser(friendId);
-        FriendStatus friendStatus = checkStatus(status);
-
-        user.getFriends().put(friendId, friendStatus);
-        userStorage.update(user);
-
-        if (friendStatus.equals(FriendStatus.CONFIRMED)) {
-            friend.getFriends().put(id, FriendStatus.CONFIRMED);
-            userStorage.update(friend);
-        }
-
-        return user;
+        return userStorage.addFriend(
+                getUser(id),
+                getUser(friendId),
+                checkStatus(status)
+        );
     }
 
     public User removeFriend(Long id, Long friendId) {
-        User user = getUser(id);
-        User friend = getUser(friendId);
-
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(id);
-
-        userStorage.update(user);
-        userStorage.update(friend);
-
-        return user;
+        return userStorage.removeFriend(getUser(id), getUser(friendId));
     }
 
     public Collection<User> findFriends(Long id) {
-        return getUser(id)
-                .getFriends()
-                .keySet()
-                .stream()
-                .map(this::getUser)
-                .toList();
+        return userStorage.findFriends(getUser(id));
     }
 
     public Collection<User> findCommonFriends(Long id, Long otherId) {
-        Set<Long> userFriends = getUser(id).getFriends().keySet();
-        Set<Long> otherUser = getUser(otherId).getFriends().keySet();
-
-        return userFriends.stream()
-                .filter(otherUser::contains)
-                .map(this::getUser)
-                .toList();
+        return userStorage.findCommonFriends(getUser(id), getUser(otherId));
     }
-
 
     private User getUser(Long id) {
         return userStorage.findById(id)

@@ -7,6 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception_handler.ErrorResponse;
 import ru.yandex.practicum.filmorate.exception_handler.ValidationErrorResponse;
@@ -75,5 +76,12 @@ public class ErrorHandlingController {
     public ErrorResponse onDateTimeParseException(DateTimeParseException e) {
         log.error(e.getMessage(), e);
         return new ErrorResponse("Дата должна быть в формате yyyy-MM-dd, вами введено: " + e.getParsedString());
+    }
+
+    @ExceptionHandler(InternalServerException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse onInternalServerException(InternalServerException e) {
+        log.error(e.getMessage(), e);
+        return new ErrorResponse(e.getMessage());
     }
 }

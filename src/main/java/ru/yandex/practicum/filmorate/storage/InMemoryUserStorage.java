@@ -2,7 +2,9 @@ package ru.yandex.practicum.filmorate.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.model.FriendStatus;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.util.UserUtil;
 
 import java.util.*;
 
@@ -34,26 +36,8 @@ public class InMemoryUserStorage implements UserStorage {
             return Optional.empty();
         }
 
-        User oldUser = users.get(newUser.getId());
-
-        if (newUser.getEmail() != null) {
-            log.info("Updating user with email: {}", newUser.getEmail());
-            oldUser.setEmail(newUser.getEmail());
-        }
-        if (newUser.getLogin() != null) {
-            log.info("Updating user with login: {}", newUser.getLogin());
-            oldUser.setLogin(newUser.getLogin());
-        }
-        if (newUser.getName() != null) {
-            log.info("Updating user with name: {}", newUser.getName());
-            oldUser.setName(newUser.getName());
-        }
-        if (newUser.getBirthday() != null) {
-            log.info("Updating user with birthday: {}", newUser.getBirthday());
-            oldUser.setBirthday(newUser.getBirthday());
-        }
-
-        users.put(oldUser.getId(), oldUser);
+        User updatedUser = UserUtil.userFieldsUpdate(users.get(newUser.getId()), newUser);
+        users.put(updatedUser.getId(), updatedUser);
 
         return Optional.of(users.get(newUser.getId()));
     }
@@ -61,6 +45,44 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public Optional<User> removeById(Long id) {
         return Optional.ofNullable(users.remove(id));
+    }
+
+    @Override
+    public User addFriend(User user, User friend, FriendStatus friendStatus) {
+        user.getFriends().put(friend.getId(), friendStatus);
+
+        if (friendStatus.equals(FriendStatus.CONFIRMED)) {
+            friend.getFriends().put(user.getId(), FriendStatus.CONFIRMED);
+        }
+
+        return user;
+    }
+
+    @Override
+    public User removeFriend(User user, User friend) {
+        user.getFriends().remove(friend.getId());
+        friend.getFriends().remove(user.getId());
+        return user;
+    }
+
+    @Override
+    public Collection<User> findFriends(User user) {
+        return user.getFriends()
+                .keySet()
+                .stream()
+                .map(this.users::get)
+                .toList();
+    }
+
+    @Override
+    public Collection<User> findCommonFriends(User user, User otherUser) {
+        Set<Long> userFriends = user.getFriends().keySet();
+        Set<Long> otherUserFriends = otherUser.getFriends().keySet();
+
+        return userFriends.stream()
+                .filter(otherUserFriends::contains)
+                .map(this.users::get)
+                .toList();
     }
 
     private long getNextId() {

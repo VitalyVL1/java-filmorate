@@ -19,7 +19,7 @@ import java.util.Map;
 @Slf4j
 public class User {
     private Long id;
-    private final Map<Long, FriendStatus> friends = new HashMap<>();
+    private Map<Long, FriendStatus> friends = new HashMap<>();
 
     @NotBlank(message = "Email не может быть пустым")
     @Email(message = "Введен некорректный email")
