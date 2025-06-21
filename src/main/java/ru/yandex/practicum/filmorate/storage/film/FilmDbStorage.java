@@ -52,7 +52,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                 film.getDescription(),
                 Date.valueOf(film.getReleaseDate()),
                 film.getDuration(),
-                film.getRating().getId()
+                film.getMpa().getId()
         );
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
@@ -101,7 +101,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                     updatedFilm.getDescription(),
                     Date.valueOf(updatedFilm.getReleaseDate()),
                     updatedFilm.getDuration(),
-                    updatedFilm.getRating().getId(),
+                    updatedFilm.getMpa().getId(),
                     updatedFilm.getId()
             );
 

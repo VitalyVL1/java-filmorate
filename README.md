@@ -24,7 +24,7 @@ SQL-схема: [schema.sql](src%2Fmain%2Fresources%2Fschema.sql)
 | description  | VARCHAR(200)                                             | Описание длиной до 200 символов                    |
 | release_date | DATE                                                     | Дата должна быть не раньше 28.12.1895              |
 | duration     | INTEGER                                                  | Продолжительность должна быть положительным числом |
-| rating-id    | INTEGER REFERENCES ratings(rating_id) ON DELETE SET NULL | Ссылка на таблицу ratings                          |
+| mpa-id    | INTEGER REFERENCES ratings(rating_id) ON DELETE SET NULL | Ссылка на таблицу ratings                          |
 
 #### Таблица users:
 

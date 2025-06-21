@@ -21,5 +21,5 @@ public interface FilmStorage {
 
     Film removeLike(Film film, User user);
 
-    public Collection<Film> findPopular(Integer limit);
+    Collection<Film> findPopular(Integer limit);
 }

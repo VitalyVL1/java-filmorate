@@ -19,7 +19,7 @@ public class Film {
     private Long id;
     private Set<Long> likes = new HashSet<>();
     private Set<Genre> genres = new HashSet<>();
-    private Rating rating;
+    private Mpa mpa;
 
     @NotBlank(message = "Название не может быть пустым")
     private String name;
