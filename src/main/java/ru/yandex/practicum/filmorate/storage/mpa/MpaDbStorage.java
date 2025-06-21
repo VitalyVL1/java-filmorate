@@ -52,6 +52,7 @@ public class MpaDbStorage extends BaseRepository<Mpa> implements MpaStorage {
             if (!newMpa.getDescription().isBlank()) {
                 updatedMpa.setDescription(newMpa.getDescription());
             }
+            update(UPDATE_QUERY, updatedMpa.getName(), updatedMpa.getDescription(), updatedMpa.getId());
             return Optional.of(updatedMpa);
         }
 

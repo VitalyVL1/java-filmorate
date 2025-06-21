@@ -50,6 +50,7 @@ public class GenreDbStorage extends BaseRepository<Genre> implements GenreStorag
             if (!newGenre.getName().isBlank()) {
                 updatedGenre.setName(newGenre.getName());
             }
+            update(UPDATE_QUERY, updatedGenre.getName(), updatedGenre.getId());
             return Optional.of(updatedGenre);
         }
 
