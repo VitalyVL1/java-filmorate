@@ -8,12 +8,12 @@ import java.util.Optional;
 public interface MpaStorage {
     Mpa create(Mpa mpa);
 
-    Optional<Mpa> findById(Long id);
+    Optional<Mpa> findById(Integer id);
 
     Collection<Mpa> findAll();
 
     Optional<Mpa> update(Mpa newMpa);
 
-    Optional<Mpa> removeById(Long id);
+    Optional<Mpa> removeById(Integer id);
 
 }

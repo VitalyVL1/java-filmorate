@@ -1,5 +1,5 @@
 DELETE FROM genres;
-DELETE FROM ratings;
+DELETE FROM mpa;
 
 INSERT INTO genres (NAME)
 VALUES ('Комедия'),
@@ -9,7 +9,7 @@ VALUES ('Комедия'),
        ('Документальный'),
        ('Боевик');
 
-INSERT INTO ratings (NAME, DESCRIPTION)
+INSERT INTO mpa (NAME, DESCRIPTION)
 VALUES ('G', 'у фильма нет возрастных ограничений'),
        ('PG', 'детям рекомендуется смотреть фильм с родителями'),
        ('PG-13', 'детям до 13 лет просмотр не желателен'),

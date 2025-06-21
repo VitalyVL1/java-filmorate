@@ -35,7 +35,8 @@ public class FilmService {
             throw new ConditionsNotMetException("Id должен быть указан");
         }
 
-        return getFilm(id);
+        return filmStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Фильм с id = " + id + " не найден"));
     }
 
     public Collection<Film> findAll() {
@@ -61,20 +62,15 @@ public class FilmService {
     }
 
     public Film addLike(Long id, Long userId) {
-        return filmStorage.addLike(getFilm(id), getUser(userId));
+        return filmStorage.addLike(findById(id), getUser(userId));
     }
 
     public Film removeLike(Long id, Long userId) {
-        return filmStorage.removeLike(getFilm(id), getUser(userId));
+        return filmStorage.removeLike(findById(id), getUser(userId));
     }
 
     public Collection<Film> findPopular(Integer limit) {
         return filmStorage.findPopular(limit);
-    }
-
-    private Film getFilm(Long id) {
-        return filmStorage.findById(id)
-                .orElseThrow(() -> new NotFoundException("Фильм с id = " + id + " не найден"));
     }
 
     private User getUser(Long id) {

@@ -24,22 +24,22 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private static final String FIND_ALL_FILMS_QUERY = "SELECT * FROM films";
     private static final String FIND_FILM_BY_ID_QUERY = "SELECT * FROM films WHERE film_id = ?";
     private static final String INSERT_FILM_QUERY =
-            "INSERT INTO films(name, description, release_date, duration, rating_id) " +
+            "INSERT INTO films(name, description, release_date, duration, mpa_id) " +
                     "VALUES (?, ?, ?, ?, ?)";
     private static final String UPDATE_FILM_QUERY = "UPDATE films SET " +
-            "name = ?, description = ?, release_date = ?, duration = ?, rating_id " +
+            "name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? " +
             "WHERE film_id = ?";
     private static final String DELETE_FILM_QUERY = "DELETE FROM films WHERE film_id = ?";
     private static final String LIKES_FILM_QUERY = "SELECT user_id FROM likes WHERE film_id = ?";
-    private static final String GENRES_FILM_QUERY = "SELECT genre_id, name FROM film_genres " +
+    private static final String GENRES_FILM_QUERY = "SELECT fg.genre_id, name FROM film_genres fg " +
             "JOIN genres USING(genre_id) " +
             "WHERE film_id = ?";
     private static final String ADD_LIKE_QUERY = "INSERT INTO likes(film_id, user_id) " +
             "VALUES (?, ?)";
     private static final String DELETE_LIKE_QUERY = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
     private static final String FIND_POPULAR_QUERY = "SELECT * FROM films " +
-            "JOIN (SELECT film_id, COUNT(user_id) AS like FROM likes GROUP BY film_id) USING(film_id)" +
-            "ORDER BY like DESC LIMIT ?";
+            "JOIN (SELECT film_id, COUNT(user_id) AS lks FROM likes GROUP BY film_id) AS l USING(film_id)" +
+            "ORDER BY lks DESC LIMIT ?";
     private static final String ADD_GENRE_TO_FILM = "INSERT INTO film_genres (film_id, genre_id)" +
             "VALUES(?, ?)";
     private static final String DELETE_GENRE_BY_FILM = "DELETE FROM film_genres WHERE film_id = ?";
@@ -55,11 +55,12 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                 film.getMpa().getId()
         );
 
+        film.setId(id);
+
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             fillFilmGenres(film);
         }
 
-        film.setId(id);
         return film;
     }
 

@@ -45,11 +45,7 @@ public class UserService {
     }
 
     public User update(User newUser) {
-        if (newUser.getId() == null) {
-            throw new ConditionsNotMetException("Id должен быть указан");
-        }
-
-        User oldUser = getUser(newUser.getId());
+        User oldUser = findById(newUser.getId());
 
         if (newUser.getEmail() != null &&
                 !newUser.getEmail().equals(oldUser.getEmail()) &&
@@ -76,29 +72,22 @@ public class UserService {
 
     public User addFriend(Long id, Long friendId, String status) {
         return userStorage.addFriend(
-                getUser(id),
-                getUser(friendId),
+                findById(id),
+                findById(friendId),
                 checkStatus(status)
         );
     }
 
     public User removeFriend(Long id, Long friendId) {
-        return userStorage.removeFriend(getUser(id), getUser(friendId));
+        return userStorage.removeFriend(findById(id), findById(friendId));
     }
 
     public Collection<User> findFriends(Long id) {
-        return userStorage.findFriends(getUser(id));
+        return userStorage.findFriends(findById(id));
     }
 
     public Collection<User> findCommonFriends(Long id, Long otherId) {
-        return userStorage.findCommonFriends(getUser(id), getUser(otherId));
-    }
-
-    private User getUser(Long id) {
-        return userStorage.findById(id)
-                .orElseThrow(
-                        () -> new NotFoundException("Пользователь с id = " + id + " не найден")
-                );
+        return userStorage.findCommonFriends(findById(id), findById(otherId));
     }
 
     private boolean containsEmail(User user) {
