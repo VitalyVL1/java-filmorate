@@ -63,8 +63,8 @@ public class FilmController {
 
     @GetMapping("/popular")
     @ResponseStatus(HttpStatus.OK)
-    public Collection<Film> findPopular(@RequestParam(defaultValue = "10") Integer count) {
-        log.debug("Find popular {} films", count);
-        return filmService.findPopular(count);
+    public Collection<Film> findPopular(@RequestParam(defaultValue = "10") Integer limit) {
+        log.debug("Find popular {} films", limit);
+        return filmService.findPopular(limit);
     }
 }

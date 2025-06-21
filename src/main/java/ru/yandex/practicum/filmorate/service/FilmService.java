@@ -7,8 +7,8 @@ import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.Collection;
 import java.util.Comparator;
@@ -20,8 +20,9 @@ public class FilmService {
     private final UserStorage userStorage;
 
     public FilmService(
-            FilmStorage filmStorage,
-            @Qualifier("userDbStorage") UserStorage userStorage) {
+            @Qualifier("filmDbStorage") FilmStorage filmStorage,
+            @Qualifier("userDbStorage") UserStorage userStorage
+    ) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
     }
@@ -61,25 +62,15 @@ public class FilmService {
     }
 
     public Film addLike(Long id, Long userId) {
-        Film film = getFilm(id);
-        User user = getUser(userId);
-        film.getLikes().add(user.getId());
-        return filmStorage.update(film).get(); //дополнительные действия не требуются т.к. уже наверняка известно, что фильм в списке
+        return filmStorage.addLike(getFilm(id), getUser(userId));
     }
 
     public Film removeLike(Long id, Long userId) {
-        Film film = getFilm(id);
-        User user = getUser(userId);
-        film.getLikes().remove(user.getId());
-        return filmStorage.update(film).get(); //дополнительные действия не требуются т.к. уже наверняка известно, что фильм в списке
+        return filmStorage.removeLike(getFilm(id), getUser(userId));
     }
 
-    public Collection<Film> findPopular(Integer count) {
-        Comparator<Film> comparator = Comparator.comparingInt(f -> f.getLikes().size());
-        return filmStorage.findAll().stream()
-                .sorted(comparator.reversed())
-                .limit(count)
-                .toList();
+    public Collection<Film> findPopular(Integer limit) {
+        return filmStorage.findPopular(limit);
     }
 
     private Film getFilm(Long id) {

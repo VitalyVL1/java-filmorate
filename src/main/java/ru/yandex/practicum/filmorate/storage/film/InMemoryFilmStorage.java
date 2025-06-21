@@ -1,8 +1,10 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.film;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.util.FilmUtil;
 
 import java.util.*;
 
@@ -34,26 +36,8 @@ public class InMemoryFilmStorage implements FilmStorage {
             return Optional.empty();
         }
 
-        Film oldFilm = films.get(newFilm.getId());
-
-        if (newFilm.getName() != null) {
-            log.info("Updating film with name: {}", newFilm.getName());
-            oldFilm.setName(newFilm.getName());
-        }
-        if (newFilm.getDescription() != null) {
-            log.info("Updating film with description: {}", newFilm.getDescription());
-            oldFilm.setDescription(newFilm.getDescription());
-        }
-        if (newFilm.getReleaseDate() != null) {
-            log.info("Updating film with releaseDate: {}", newFilm.getReleaseDate());
-            oldFilm.setReleaseDate(newFilm.getReleaseDate());
-        }
-        if (newFilm.getDuration() != null) {
-            log.info("Updating film with duration: {}", newFilm.getDuration());
-            oldFilm.setDuration(newFilm.getDuration());
-        }
-
-        films.put(oldFilm.getId(), oldFilm);
+        Film updatedFilm = FilmUtil.filmFieldsUpdate(films.remove(newFilm.getId()), newFilm);
+        films.put(updatedFilm.getId(), updatedFilm);
 
         return Optional.of(films.get(newFilm.getId()));
     }
@@ -69,5 +53,29 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .reduce(Long::max)
                 .orElse(0L);
         return ++currentMaxId;
+    }
+
+    @Override
+    public Film addLike(Film film, User user) {
+        film.getLikes().add(user.getId());
+        films.put(film.getId(), film);
+        return film;
+    }
+
+    @Override
+    public Film removeLike(Film film, User user) {
+        film.getLikes().remove(user.getId());
+        films.put(film.getId(), film);
+        return film;
+    }
+
+    @Override
+    public Collection<Film> findPopular(Integer limit) {
+        Comparator<Film> comparator = Comparator.comparingInt(f -> f.getLikes().size());
+        return films.values()
+                .stream()
+                .sorted(comparator.reversed())
+                .limit(limit)
+                .toList();
     }
 }

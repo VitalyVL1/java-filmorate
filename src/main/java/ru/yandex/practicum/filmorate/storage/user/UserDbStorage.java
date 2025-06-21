@@ -1,4 +1,4 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.user;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.model.FriendStatus;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.BaseRepository;
 import ru.yandex.practicum.filmorate.util.UserUtil;
 
 import java.sql.Date;
@@ -65,8 +66,7 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
             return Optional.empty();
         }
 
-        Map<Long, FriendStatus> friends = getFriends(id);
-        user.get().getFriends().putAll(friends);
+        user.get().getFriends().putAll(getFriends(id));
 
         return user;
     }
@@ -94,7 +94,7 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
                     updatedUser.getEmail(),
                     updatedUser.getLogin(),
                     updatedUser.getName(),
-                    updatedUser.getBirthday(),
+                    Date.valueOf(updatedUser.getBirthday()),
                     updatedUser.getId()
             );
 
