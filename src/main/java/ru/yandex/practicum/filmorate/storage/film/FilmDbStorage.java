@@ -14,9 +14,7 @@ import ru.yandex.practicum.filmorate.storage.mappers.MpaRowMapper;
 import ru.yandex.practicum.filmorate.util.FilmUtil;
 
 import java.sql.Date;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -177,7 +175,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
     private Set<Long> getFilmLikes(Long id) {
         return jdbc.queryForList(LIKES_FILM_QUERY, id)
                 .stream()
-                .map(x -> Integer.toUnsignedLong((Integer) x.get("user_id")))
+                .map(x -> ((Number) x.get("user_id")).longValue())
                 .collect(Collectors.toSet());
     }
 
@@ -190,7 +188,7 @@ public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
                     genre.setName(x.get("name").toString());
                     return genre;
                 })
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparingInt(Genre::getId))));
     }
 
     private Set<Genre> fillFilmGenres(Film film) {

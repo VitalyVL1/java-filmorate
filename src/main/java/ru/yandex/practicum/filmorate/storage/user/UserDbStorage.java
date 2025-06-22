@@ -146,7 +146,7 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
         return jdbc.queryForList(FOR_MAP_FRIENDS_ID_STATUS, userId)
                 .stream()
                 .collect(Collectors.toMap(
-                        k -> Integer.toUnsignedLong((Integer) k.get("friend_id")), //двойной кастинг, т.к. сразу в Long в этом месте не кастится
+                        k -> ((Number) k.get("friend_id")).longValue(), //двойной кастинг, т.к. сразу в Long в этом месте не кастится
                         v -> FriendStatus.valueOf((String) v.get("status")))
                 );
     }
