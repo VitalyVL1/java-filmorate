@@ -24,10 +24,10 @@ public class FilmService {
     private final GenreStorage genreStorage;
 
     public FilmService(
-            @Qualifier("filmDbStorage") FilmStorage filmStorage,
-            @Qualifier("userDbStorage") UserStorage userStorage,
-            MpaStorage mpaStorage,
-            GenreStorage genreStorage
+            @Qualifier("filmStorageAlias") FilmStorage filmStorage,
+            @Qualifier("userStorageAlias") UserStorage userStorage,
+            @Qualifier("mpaStorageAlias") MpaStorage mpaStorage,
+            @Qualifier("genreStorageAlias") GenreStorage genreStorage
     ) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;

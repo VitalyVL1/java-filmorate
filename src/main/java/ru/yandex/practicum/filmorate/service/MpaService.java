@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.service;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
@@ -13,7 +14,7 @@ import java.util.Collection;
 public class MpaService {
     private final MpaStorage mpaStorage;
 
-    public MpaService(MpaStorage mpaStorage) {
+    public MpaService(@Qualifier("mpaStorageAlias") MpaStorage mpaStorage) {
         this.mpaStorage = mpaStorage;
     }
 
