@@ -52,9 +52,14 @@ public class GenreService {
                 );
     }
 
-    public boolean containsName(Genre genre) {
+    private boolean containsName(Genre genre) {
         return genreStorage.findAll().stream()
                 .map(Genre::getName)
                 .anyMatch(genre.getName()::equals);
+    }
+
+    public boolean containsGenre(Genre genre) {
+        return genreStorage.findAll().stream()
+                .anyMatch(genre::equals);
     }
 }

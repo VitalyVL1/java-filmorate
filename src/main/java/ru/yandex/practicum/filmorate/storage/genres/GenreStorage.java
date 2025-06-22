@@ -16,4 +16,5 @@ public interface GenreStorage {
 
     Optional<Genre> removeById(Integer id);
 
+    boolean contains(Genre genre);
 }

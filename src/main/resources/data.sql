@@ -1,5 +1,7 @@
-DELETE FROM genres;
-DELETE FROM mpa;
+DELETE
+FROM genres;
+DELETE
+FROM mpa;
 
 INSERT INTO genres (NAME)
 VALUES ('Комедия'),

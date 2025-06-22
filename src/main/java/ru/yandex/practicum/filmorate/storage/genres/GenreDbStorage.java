@@ -17,7 +17,7 @@ public class GenreDbStorage extends BaseRepository<Genre> implements GenreStorag
         super(jdbc, mapper);
     }
 
-    private static final String FIND_ALL_QUERY = "SELECT * FROM genres";
+    private static final String FIND_ALL_QUERY = "SELECT * FROM genres ORDER BY genre_id";
     private static final String FIND_BY_ID = "SELECT * FROM genres WHERE genre_id = ?";
     private static final String INSERT_QUERY = "INSERT INTO genres(name) VALUES (?)";
     private static final String UPDATE_QUERY = "UPDATE genres SET name = ? WHERE genre_id = ?";
@@ -62,5 +62,11 @@ public class GenreDbStorage extends BaseRepository<Genre> implements GenreStorag
         Optional<Genre> deletedGenreOptional = findById(id);
         delete(DELETE_QUERY, id);
         return deletedGenreOptional;
+    }
+
+    @Override
+    public boolean contains(Genre genre) {
+        return findAll().stream()
+                .anyMatch(genre::equals);
     }
 }

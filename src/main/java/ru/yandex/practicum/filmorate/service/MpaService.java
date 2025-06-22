@@ -52,7 +52,7 @@ public class MpaService {
                 );
     }
 
-    public boolean containsName(Mpa mpa) {
+    private boolean containsName(Mpa mpa) {
         return mpaStorage.findAll().stream()
                 .map(Mpa::getName)
                 .anyMatch(mpa.getName()::equals);

@@ -17,7 +17,7 @@ public class MpaDbStorage extends BaseRepository<Mpa> implements MpaStorage {
         super(jdbc, mapper);
     }
 
-    private static final String FIND_ALL_QUERY = "SELECT * FROM mpa";
+    private static final String FIND_ALL_QUERY = "SELECT * FROM mpa ORDER BY mpa_id";
     private static final String FIND_BY_ID = "SELECT * FROM mpa WHERE mpa_id = ?";
     private static final String INSERT_QUERY = "INSERT INTO mpa(name, description) VALUES (?, ?)";
     private static final String UPDATE_QUERY = "UPDATE mpa SET name = ?, description = ? WHERE mpa_id = ?";
@@ -64,5 +64,11 @@ public class MpaDbStorage extends BaseRepository<Mpa> implements MpaStorage {
         Optional<Mpa> deletedMpaOptional = findById(id);
         delete(DELETE_QUERY, id);
         return deletedMpaOptional;
+    }
+
+    @Override
+    public boolean contains(Mpa mpa) {
+        return findAll().stream()
+                .anyMatch(mpa::equals);
     }
 }

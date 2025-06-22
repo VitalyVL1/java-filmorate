@@ -22,6 +22,14 @@ public class FilmUtil {
             log.info("Updating film with duration: {}", newFilm.getDuration());
             oldFilm.setDuration(newFilm.getDuration());
         }
+        if (newFilm.getMpa() != null) {
+            log.info("Updating film with mpa: {}", newFilm.getMpa());
+            oldFilm.setMpa(newFilm.getMpa());
+        }
+        if (newFilm.getGenres() != null) {
+            log.info("Updating film with genres: {}", newFilm.getGenres());
+            oldFilm.setGenres(newFilm.getGenres());
+        }
         return oldFilm;
     }
 }

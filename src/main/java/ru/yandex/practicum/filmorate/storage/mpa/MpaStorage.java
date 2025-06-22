@@ -16,4 +16,6 @@ public interface MpaStorage {
 
     Optional<Mpa> removeById(Integer id);
 
+    boolean contains(Mpa mpa);
+
 }
