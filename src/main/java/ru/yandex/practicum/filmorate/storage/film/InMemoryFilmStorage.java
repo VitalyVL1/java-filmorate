@@ -111,8 +111,8 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     private Set<Genre> getGenres(Film film) {
         return film.getGenres().stream().map(
-                genre -> inMemoryGenreStorage.findById(genre.getId())
-                        .orElseThrow(() -> new NotFoundException("Genre не найден, указанный id = " + genre.getId())))
+                        genre -> inMemoryGenreStorage.findById(genre.getId())
+                                .orElseThrow(() -> new NotFoundException("Genre не найден, указанный id = " + genre.getId())))
                 .collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparingInt(Genre::getId))));
     }
 }

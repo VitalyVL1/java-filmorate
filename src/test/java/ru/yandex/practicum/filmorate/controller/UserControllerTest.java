@@ -30,6 +30,8 @@ public class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new JavaTimeModule());
+
     private static final String CORRECT_LOGIN = "Login";
     private static final String CORRECT_NAME = "Name";
     private static final String CORRECT_EMAIL = "email@email.com";
@@ -43,8 +45,6 @@ public class UserControllerTest {
     private static final String INCORRECT_EMAIL = "1234abc";
     private static final String INCORRECT_LOGIN = "Us er";
     private static final LocalDate INCORRECT_BIRTHDAY = LocalDate.of(3000, 1, 1);
-
-    private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new JavaTimeModule());
 
     @Test
     @Order(1)

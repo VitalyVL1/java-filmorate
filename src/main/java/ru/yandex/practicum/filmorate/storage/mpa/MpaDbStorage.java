@@ -25,7 +25,7 @@ public class MpaDbStorage extends BaseRepository<Mpa> implements MpaStorage {
 
     @Override
     public Mpa create(Mpa mpa) {
-        int id = (int) insert(INSERT_QUERY, mpa.getName());
+        int id = (int) insert(INSERT_QUERY, mpa.getName(), mpa.getDescription());
         mpa.setId(id);
         return mpa;
     }
