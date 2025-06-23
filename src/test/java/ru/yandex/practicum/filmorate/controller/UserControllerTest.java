@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -23,20 +23,22 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @AutoConfigureTestDatabase
+@AutoConfigureMockMvc
+@SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@WebMvcTest(UserController.class)
-@ComponentScan(basePackages = "ru.yandex.practicum.filmorate")
 public class UserControllerTest {
+    @Autowired
+    private MockMvc mockMvc;
 
-    private static final String CORRECT_EMAIL = "user1@email.com";
-    private static final String CORRECT_LOGIN = "User_login1";
-    private static final String CORRECT_NAME = "User_name1";
-    private static final LocalDate CORRECT_BIRTHDAY = LocalDate.of(1900, 1, 1);
+    private static final String CORRECT_LOGIN = "Login";
+    private static final String CORRECT_NAME = "Name";
+    private static final String CORRECT_EMAIL = "email@email.com";
+    private static final LocalDate CORRECT_BIRTHDAY = LocalDate.of(1986, 10, 2);
 
-    private static final String UPDATE_EMAIL = "update_user1@email.com";
-    private static final String UPDATE_LOGIN = "update_User_login1";
-    private static final String UPDATE_NAME = "update_User_name1";
-    private static final LocalDate UPDATE_BIRTHDAY = LocalDate.of(2000, 1, 1);
+    private static final String UPDATE_LOGIN = "update_login";
+    private static final String UPDATE_NAME = "update_name";
+    private static final String UPDATE_EMAIL = "update_email@email.com";
+    private static final LocalDate UPDATE_BIRTHDAY = LocalDate.of(1989, 6, 24);
 
     private static final String INCORRECT_EMAIL = "1234abc";
     private static final String INCORRECT_LOGIN = "Us er";
@@ -44,86 +46,68 @@ public class UserControllerTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new JavaTimeModule());
 
-    @Autowired
-    private MockMvc mockMvc;
-
     @Test
     @Order(1)
     void addUser_allFields_ok() throws Exception {
-        User user = new User();
-        user.setName(CORRECT_NAME);
-        user.setEmail(CORRECT_EMAIL);
-        user.setBirthday(CORRECT_BIRTHDAY);
-        user.setLogin(CORRECT_LOGIN);
+        String userJson = jsonString(
+                CORRECT_LOGIN,
+                CORRECT_NAME,
+                CORRECT_EMAIL,
+                CORRECT_BIRTHDAY
+        );
 
-        String userJson = MAPPER.writeValueAsString(user);
-
-        MvcResult result = mockMvc.perform(post("/users")
+        mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        User responseUser = MAPPER.readValue(result.getResponse().getContentAsString(), User.class);
-
-        assertEquals(CORRECT_NAME, responseUser.getName());
-        assertEquals(CORRECT_EMAIL, responseUser.getEmail());
-        assertEquals(CORRECT_BIRTHDAY, responseUser.getBirthday());
-        assertEquals(CORRECT_LOGIN, responseUser.getLogin());
-        assertEquals(1, responseUser.getId());
+                .andExpect(jsonPath("$.login", is(CORRECT_LOGIN)))
+                .andExpect(jsonPath("$.name", is(CORRECT_NAME)))
+                .andExpect(jsonPath("$.email", is(CORRECT_EMAIL)))
+                .andExpect(jsonPath("$.birthday", is(CORRECT_BIRTHDAY.toString())));
     }
 
     @Test
     @Order(2)
     void updateUser_allFields_ok() throws Exception {
-        User user = new User();
-        user.setId(1L);
-        user.setName(UPDATE_NAME);
-        user.setEmail(UPDATE_EMAIL);
-        user.setBirthday(UPDATE_BIRTHDAY);
-        user.setLogin(UPDATE_LOGIN);
+        String userJson = jsonUpdateString(
+                1,
+                UPDATE_LOGIN,
+                UPDATE_NAME,
+                UPDATE_EMAIL,
+                UPDATE_BIRTHDAY
+        );
 
-        String userJson = MAPPER.writeValueAsString(user);
-
-        MvcResult result = mockMvc.perform(put("/users")
+        mockMvc.perform(put("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson))
                 .andExpect(status().isOk())
-                .andReturn();
-
-        User responseUser = MAPPER.readValue(result.getResponse().getContentAsString(), User.class);
-
-        assertEquals(UPDATE_NAME, responseUser.getName());
-        assertEquals(UPDATE_EMAIL, responseUser.getEmail());
-        assertEquals(UPDATE_BIRTHDAY, responseUser.getBirthday());
-        assertEquals(UPDATE_LOGIN, responseUser.getLogin());
-        assertEquals(1, responseUser.getId());
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.login", is(UPDATE_LOGIN)))
+                .andExpect(jsonPath("$.name", is(UPDATE_NAME)))
+                .andExpect(jsonPath("$.email", is(UPDATE_EMAIL)))
+                .andExpect(jsonPath("$.birthday", is(UPDATE_BIRTHDAY.toString())));
     }
 
     @Test
     @Order(3)
     void addUser_noName_ok() throws Exception {
-        User user = new User();
-        user.setEmail(CORRECT_EMAIL);
-        user.setBirthday(CORRECT_BIRTHDAY);
-        user.setLogin(CORRECT_LOGIN);
+        String userJson = jsonString(
+                CORRECT_LOGIN,
+                "",
+                CORRECT_EMAIL,
+                CORRECT_BIRTHDAY
+        );
 
-        String userJson = MAPPER.writeValueAsString(user);
-
-        MvcResult result = mockMvc.perform(post("/users")
+        mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson))
                 .andExpect(status().isCreated())
-                .andReturn();
-
-        User responseUser = MAPPER.readValue(result.getResponse().getContentAsString(), User.class);
-
-        assertEquals(CORRECT_LOGIN, responseUser.getName());
-        assertEquals(CORRECT_EMAIL, responseUser.getEmail());
-        assertEquals(CORRECT_BIRTHDAY, responseUser.getBirthday());
-        assertEquals(CORRECT_LOGIN, responseUser.getLogin());
-        assertEquals(2, responseUser.getId());
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.login", is(CORRECT_LOGIN)))
+                .andExpect(jsonPath("$.name", is(CORRECT_LOGIN)))
+                .andExpect(jsonPath("$.email", is(CORRECT_EMAIL)))
+                .andExpect(jsonPath("$.birthday", is(CORRECT_BIRTHDAY.toString())));
     }
 
     @Test
@@ -203,19 +187,21 @@ public class UserControllerTest {
 
     @Test
     void findCommonFriends_ok() throws Exception {
-        User user = new User();
-        user.setName("user_name");
-        user.setEmail("user@email.com");
-        user.setBirthday(LocalDate.of(1900, 1, 1));
-        user.setLogin("user_login");
-
-        String userJson = MAPPER.writeValueAsString(user);
+        String userJson = jsonString(
+                "Login1",
+                "Name1",
+                "email1@email.com",
+                LocalDate.of(1984, 5, 6)
+        );
 
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+
+        mockMvc.perform(delete("/users/2/friends/1"))
+                .andExpect(status().isOk());
 
         mockMvc.perform(put("/users/1/friends/2?status=CONFIRMED"))
                 .andExpect(status().isOk());
@@ -232,30 +218,13 @@ public class UserControllerTest {
     }
 
     @Test
-    void addUser_incorrectEmail_badRequest() throws Exception {
-        User user = new User();
-        user.setName(CORRECT_NAME);
-        user.setEmail(INCORRECT_EMAIL);
-        user.setBirthday(CORRECT_BIRTHDAY);
-        user.setLogin(CORRECT_LOGIN);
-
-        String userJson = MAPPER.writeValueAsString(user);
-
-        mockMvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(userJson))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void addUser_incorrectLogin_badRequest() throws Exception {
-        User user = new User();
-        user.setName(CORRECT_NAME);
-        user.setEmail(CORRECT_EMAIL);
-        user.setBirthday(CORRECT_BIRTHDAY);
-        user.setLogin(INCORRECT_LOGIN);
-
-        String userJson = MAPPER.writeValueAsString(user);
+    void addUser_failEmail_badRequest() throws Exception {
+        String userJson = jsonString(
+                CORRECT_LOGIN,
+                CORRECT_NAME,
+                INCORRECT_EMAIL,
+                CORRECT_BIRTHDAY
+        );
 
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -264,14 +233,28 @@ public class UserControllerTest {
     }
 
     @Test
-    void addUser_incorrectBirthday_badRequest() throws Exception {
-        User user = new User();
-        user.setName(CORRECT_NAME);
-        user.setEmail(CORRECT_EMAIL);
-        user.setBirthday(INCORRECT_BIRTHDAY);
-        user.setLogin(CORRECT_LOGIN);
+    void addUser_failLogin_badRequest() throws Exception {
+        String userJson = jsonString(
+                INCORRECT_LOGIN,
+                CORRECT_NAME,
+                CORRECT_EMAIL,
+                CORRECT_BIRTHDAY
+        );
 
-        String userJson = MAPPER.writeValueAsString(user);
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void addUser_failBirthday_badRequest() throws Exception {
+        String userJson = jsonString(
+                CORRECT_LOGIN,
+                CORRECT_NAME,
+                CORRECT_EMAIL,
+                INCORRECT_BIRTHDAY
+        );
 
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -281,13 +264,12 @@ public class UserControllerTest {
 
     @Test
     void addUser_blankEmail_badRequest() throws Exception {
-        User user = new User();
-        user.setName(CORRECT_NAME);
-        user.setBirthday(CORRECT_BIRTHDAY);
-        user.setLogin(CORRECT_LOGIN);
-        user.setEmail("");
-
-        String userJson = MAPPER.writeValueAsString(user);
+        String userJson = jsonString(
+                CORRECT_LOGIN,
+                CORRECT_NAME,
+                "",
+                CORRECT_BIRTHDAY
+        );
 
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -297,13 +279,12 @@ public class UserControllerTest {
 
     @Test
     void addUser_blankLogin_badRequest() throws Exception {
-        User user = new User();
-        user.setName(CORRECT_NAME);
-        user.setBirthday(CORRECT_BIRTHDAY);
-        user.setLogin("");
-        user.setEmail(CORRECT_EMAIL);
-
-        String userJson = MAPPER.writeValueAsString(user);
+        String userJson = jsonString(
+                "",
+                CORRECT_NAME,
+                CORRECT_EMAIL,
+                CORRECT_BIRTHDAY
+        );
 
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -313,14 +294,13 @@ public class UserControllerTest {
 
     @Test
     void updateUser_notFound() throws Exception {
-        User user = new User();
-        user.setId(1000L);
-        user.setName(UPDATE_NAME);
-        user.setEmail("ivan1000@gmail.com");
-        user.setBirthday(UPDATE_BIRTHDAY);
-        user.setLogin(UPDATE_LOGIN);
-
-        String userJson = MAPPER.writeValueAsString(user);
+        String userJson = jsonUpdateString(
+                1000,
+                UPDATE_LOGIN,
+                UPDATE_NAME,
+                UPDATE_EMAIL,
+                UPDATE_BIRTHDAY
+        );
 
         mockMvc.perform(put("/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -330,13 +310,12 @@ public class UserControllerTest {
 
     @Test
     void updateUser_noId_badRequest() throws Exception {
-        User user = new User();
-        user.setName(UPDATE_NAME);
-        user.setEmail("ivan1000@gmail.com");
-        user.setBirthday(UPDATE_BIRTHDAY);
-        user.setLogin(UPDATE_LOGIN);
-
-        String userJson = MAPPER.writeValueAsString(user);
+        String userJson = jsonString(
+                CORRECT_LOGIN,
+                CORRECT_NAME,
+                "email2@email.com",
+                CORRECT_BIRTHDAY
+        );
 
         mockMvc.perform(put("/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -366,12 +345,12 @@ public class UserControllerTest {
 
     @Test
     void addUser_duplicatedEmail_badRequest() throws Exception {
-        User user = new User();
-        user.setEmail(CORRECT_EMAIL);
-        user.setBirthday(CORRECT_BIRTHDAY);
-        user.setLogin(CORRECT_LOGIN);
-
-        String userJson = MAPPER.writeValueAsString(user);
+        String userJson = jsonString(
+                "Login1",
+                CORRECT_NAME,
+                CORRECT_EMAIL,
+                CORRECT_BIRTHDAY
+        );
 
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -381,17 +360,34 @@ public class UserControllerTest {
 
     @Test
     void updateUser_duplicatedEmail_badRequest() throws Exception {
-        User user = new User();
-        user.setId(1L);
-        user.setEmail(CORRECT_EMAIL);
-        user.setBirthday(CORRECT_BIRTHDAY);
-        user.setLogin(CORRECT_LOGIN);
-
-        String userJson = MAPPER.writeValueAsString(user);
+        String userJson = jsonUpdateString(
+                1,
+                UPDATE_LOGIN,
+                UPDATE_NAME,
+                CORRECT_EMAIL,
+                UPDATE_BIRTHDAY
+        );
 
         mockMvc.perform(put("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson))
                 .andExpect(status().isBadRequest());
+    }
+
+    private String jsonUpdateString(int id, String login, String name, String email, LocalDate birthday) {
+        return String.format("{\"id\":%d," +
+                        "\"login\":\"%s\"," +
+                        "\"name\":\"%s\"," +
+                        "\"email\":\"%s\"," +
+                        "\"birthday\":\"%s\"}",
+                id, login, name, email, birthday);
+    }
+
+    private String jsonString(String login, String name, String email, LocalDate birthday) {
+        return String.format("{\"login\":\"%s\"," +
+                        "\"name\":\"%s\"," +
+                        "\"email\":\"%s\"," +
+                        "\"birthday\":\"%s\"}",
+                login, name, email, birthday);
     }
 }

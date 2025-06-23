@@ -121,7 +121,20 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
                 friend.getId(),
                 friendStatus.toString()
         );
+
         user.getFriends().put(friend.getId(), friendStatus);
+
+        if (friendStatus.equals(FriendStatus.CONFIRMED)) {
+            jdbc.update(
+                    INSERT_FRIEND_QUERY,
+                    friend.getId(),
+                    user.getId(),
+                    friendStatus.toString()
+            );
+
+            friend.getFriends().put(user.getId(), friendStatus);
+        }
+
         return user;
     }
 
@@ -139,7 +152,12 @@ public class UserDbStorage extends BaseRepository<User> implements UserStorage {
 
     @Override
     public Collection<User> findCommonFriends(User user, User otherUser) {
-        return findMany(FIND_COMMON_FRIENDS_QUERY, user.getId(), otherUser.getId());
+        return findMany(FIND_COMMON_FRIENDS_QUERY, user.getId(), otherUser.getId()).stream()
+                .map(usr -> {
+                    usr.getFriends().putAll(getFriends(usr.getId()));
+                    return usr;
+                })
+                .toList();
     }
 
     private Map<Long, FriendStatus> getFriends(Long userId) {
