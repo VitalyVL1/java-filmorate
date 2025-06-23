@@ -28,7 +28,7 @@ public class MpaControllerTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private final Map<Integer, Mpa> MPA_MAP = MpaUtil.fillMpa();
+    private static final Map<Integer, Mpa> MPA = MpaUtil.fillMpa();
 
     @Test
     public void testFindAll() throws Exception {
@@ -41,8 +41,8 @@ public class MpaControllerTest {
         Mpa[] mpaDb = MAPPER.readValue(result.getResponse().getContentAsString(), Mpa[].class);
 
         for (int i = 0; i < mpaDb.length; i++) {
-            assertEquals(mpaDb[i].getName(), MPA_MAP.get(i + 1).getName());
-            assertEquals(mpaDb[i].getDescription(), MPA_MAP.get(i + 1).getDescription());
+            assertEquals(mpaDb[i].getName(), MPA.get(i + 1).getName());
+            assertEquals(mpaDb[i].getDescription(), MPA.get(i + 1).getDescription());
         }
     }
 
@@ -53,8 +53,8 @@ public class MpaControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.name", is(MPA_MAP.get(1).getName())))
-                .andExpect(jsonPath("$.description", is(MPA_MAP.get(1).getDescription())));
+                .andExpect(jsonPath("$.name", is(MPA.get(1).getName())))
+                .andExpect(jsonPath("$.description", is(MPA.get(1).getDescription())));
     }
 
     @Test
