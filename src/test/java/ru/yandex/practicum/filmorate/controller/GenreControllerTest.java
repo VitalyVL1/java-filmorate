@@ -28,7 +28,7 @@ public class GenreControllerTest {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private final Map<Integer, Genre> GENRES = GenreUtil.fillGenres();
+    private static final Map<Integer, Genre> GENRES = GenreUtil.fillGenres();
 
     @Test
     public void testFindAll() throws Exception {
