@@ -157,6 +157,25 @@ public class UserDbStorageTest {
     }
 
     @Test
+    public void testAddFriendUnconfirmed(){
+        User createdUser = new User();
+        createdUser.setLogin(UPDATE_LOGIN);
+        createdUser.setName(UPDATE_NAME);
+        createdUser.setEmail(UPDATE_EMAIL);
+        createdUser.setBirthday(UPDATE_BIRTHDAY);
+
+        userStorage.create(createdUser);
+        userStorage.create(user);
+
+        userStorage.addFriend(user, createdUser, FriendStatus.UNCONFIRMED);
+        Optional<User> friendUser = userStorage.findFriends(user).stream().findFirst();
+        assertThat(friendUser).isPresent().get().isEqualTo(createdUser);
+
+        Optional<User> friendCreatedUser = userStorage.findFriends(createdUser).stream().findFirst();
+        assertThat(friendCreatedUser).isEmpty();
+    }
+
+    @Test
     public void testFindCommonFriends() {
         User user1 = new User();
         user1.setLogin(UPDATE_LOGIN);

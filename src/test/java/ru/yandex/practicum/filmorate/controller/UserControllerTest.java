@@ -132,30 +132,22 @@ public class UserControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.friends", hasKey("2")));
 
-        MvcResult result = mockMvc.perform(get("/users")
+        mockMvc.perform(get("/users")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        User[] users = MAPPER.readValue(result.getResponse().getContentAsString(), User[].class);
-
-        assertTrue(users[0].getFriends().containsKey(2L));
-        assertTrue(users[1].getFriends().containsKey(1L));
+                .andExpect(jsonPath("$[0].friends", hasKey("2")))
+                .andExpect(jsonPath("$[1].friends", hasKey("1")));
     }
 
     @Test
     @Order(6)
     void findFriends_ok() throws Exception {
-        MvcResult result = mockMvc.perform(get("/users/1/friends")
+        mockMvc.perform(get("/users/1/friends")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        User[] friends = MAPPER.readValue(result.getResponse().getContentAsString(), User[].class);
-
-        assertEquals(2, friends[0].getId());
+                .andExpect(jsonPath("$[0].id", is(2)));
     }
 
     @Test
@@ -165,15 +157,35 @@ public class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.friends", anEmptyMap()));
 
-        MvcResult result = mockMvc.perform(get("/users")
+        mockMvc.perform(delete("/users/2/friends/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.friends", anEmptyMap()));
+
+        mockMvc.perform(get("/users")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
+                .andExpect(jsonPath("$[0].friends", anEmptyMap()))
+                .andExpect(jsonPath("$[1].friends", anEmptyMap()));
+    }
 
-        User[] users = MAPPER.readValue(result.getResponse().getContentAsString(), User[].class);
+    @Test
+    @Order(8)
+    void addUnconfirmedFriend_ok() throws Exception {
+        mockMvc.perform(put("/users/1/friends/2"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.friends", hasKey("2")));
 
-        assertFalse(users[0].getFriends().containsKey(users[1].getId()));
+        mockMvc.perform(get("/users")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0].friends", hasKey("2")))
+                .andExpect(jsonPath("$[1].friends", anEmptyMap()));
+
+        mockMvc.perform(delete("/users/1/friends/2"))
+                .andExpect(status().isOk());
     }
 
     @Test

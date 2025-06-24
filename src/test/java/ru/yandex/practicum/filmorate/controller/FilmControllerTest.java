@@ -396,14 +396,6 @@ public class FilmControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
-    private String jsonNoMpaNoGenreString(String name, String description, LocalDate releaseDate, int duration) {
-        return String.format("{\"name\":\"%s\"," +
-                        "\"description\":\"%s\"," +
-                        "\"releaseDate\":\"%s\"," +
-                        "\"duration\":%d}",
-                name, description, releaseDate, duration);
-    }
-
     private String jsonString(String name, String description, LocalDate releaseDate, int duration, int mpaId, int genreId) {
         return String.format("{\"name\":\"%s\"," +
                         "\"description\":\"%s\"," +
