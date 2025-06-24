@@ -1,14 +1,12 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -40,7 +38,7 @@ public class UserControllerTest {
     private static final LocalDate INCORRECT_BIRTHDAY = LocalDate.of(3000, 1, 1);
 
     @Test
-    @Order(1)
+    @DirtiesContext
     void addUser_allFields_ok() throws Exception {
         String userJson = jsonString(
                 CORRECT_LOGIN,
@@ -61,9 +59,11 @@ public class UserControllerTest {
     }
 
     @Test
-    @Order(2)
+    @DirtiesContext
     void updateUser_allFields_ok() throws Exception {
-        String userJson = jsonUpdateString(
+        addUserToDB(1);
+
+        String updateUserJson = jsonUpdateString(
                 1,
                 UPDATE_LOGIN,
                 UPDATE_NAME,
@@ -73,7 +73,7 @@ public class UserControllerTest {
 
         mockMvc.perform(put("/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(userJson))
+                        .content(updateUserJson))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.login", is(UPDATE_LOGIN)))
@@ -83,7 +83,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @Order(3)
+    @DirtiesContext
     void addUser_noName_ok() throws Exception {
         String userJson = jsonString(
                 CORRECT_LOGIN,
@@ -104,8 +104,11 @@ public class UserControllerTest {
     }
 
     @Test
-    @Order(4)
+    @DirtiesContext
     void getUsers_ok() throws Exception {
+        addUserToDB(1);
+        addUserToDB(2);
+
         mockMvc.perform(get("/users")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -114,8 +117,11 @@ public class UserControllerTest {
     }
 
     @Test
-    @Order(5)
+    @DirtiesContext
     void addFriend_status_confirmed_ok() throws Exception {
+        addUserToDB(1);
+        addUserToDB(2);
+
         mockMvc.perform(put("/users/1/friends/2?status=CONFIRMED"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -130,8 +136,14 @@ public class UserControllerTest {
     }
 
     @Test
-    @Order(6)
+    @DirtiesContext
     void findFriends_ok() throws Exception {
+        addUserToDB(1);
+        addUserToDB(2);
+
+        mockMvc.perform(put("/users/1/friends/2?status=CONFIRMED"))
+                .andExpect(status().isOk());
+
         mockMvc.perform(get("/users/1/friends")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -140,8 +152,14 @@ public class UserControllerTest {
     }
 
     @Test
-    @Order(7)
+    @DirtiesContext
     void deleteFriend_ok() throws Exception {
+        addUserToDB(1);
+        addUserToDB(2);
+
+        mockMvc.perform(put("/users/1/friends/2?status=CONFIRMED"))
+                .andExpect(status().isOk());
+
         mockMvc.perform(delete("/users/1/friends/2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.friends", anEmptyMap()));
@@ -159,8 +177,11 @@ public class UserControllerTest {
     }
 
     @Test
-    @Order(8)
+    @DirtiesContext
     void addUnconfirmedFriend_ok() throws Exception {
+        addUserToDB(1);
+        addUserToDB(2);
+
         mockMvc.perform(put("/users/1/friends/2"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -172,13 +193,13 @@ public class UserControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0].friends", hasKey("2")))
                 .andExpect(jsonPath("$[1].friends", anEmptyMap()));
-
-        mockMvc.perform(delete("/users/1/friends/2"))
-                .andExpect(status().isOk());
     }
 
     @Test
+    @DirtiesContext
     void getUserById_ok() throws Exception {
+        addUserToDB(1);
+
         mockMvc.perform(get("/users/1")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -187,22 +208,11 @@ public class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext
     void findCommonFriends_ok() throws Exception {
-        String userJson = jsonString(
-                "Login1",
-                "Name1",
-                "email1@email.com",
-                LocalDate.of(1984, 5, 6)
-        );
-
-        mockMvc.perform(post("/users")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(userJson))
-                .andExpect(status().isCreated())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-
-        mockMvc.perform(delete("/users/2/friends/1"))
-                .andExpect(status().isOk());
+        addUserToDB(1);
+        addUserToDB(2);
+        addUserToDB(3);
 
         mockMvc.perform(put("/users/1/friends/2?status=CONFIRMED"))
                 .andExpect(status().isOk());
@@ -219,6 +229,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext
     void addUser_failEmail_badRequest() throws Exception {
         String userJson = jsonString(
                 CORRECT_LOGIN,
@@ -234,6 +245,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext
     void addUser_failLogin_badRequest() throws Exception {
         String userJson = jsonString(
                 INCORRECT_LOGIN,
@@ -249,6 +261,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext
     void addUser_failBirthday_badRequest() throws Exception {
         String userJson = jsonString(
                 CORRECT_LOGIN,
@@ -264,6 +277,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext
     void addUser_blankEmail_badRequest() throws Exception {
         String userJson = jsonString(
                 CORRECT_LOGIN,
@@ -279,6 +293,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext
     void addUser_blankLogin_badRequest() throws Exception {
         String userJson = jsonString(
                 "",
@@ -294,6 +309,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext
     void updateUser_notFound() throws Exception {
         String userJson = jsonUpdateString(
                 1000,
@@ -310,6 +326,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext
     void updateUser_noId_badRequest() throws Exception {
         String userJson = jsonString(
                 CORRECT_LOGIN,
@@ -325,12 +342,15 @@ public class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext
     void addUnknownFriend_badRequest() throws Exception {
+        addUserToDB(1);
         mockMvc.perform(put("/users/1/friends/1001"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
+    @DirtiesContext
     void findUnknownFriends_notFound() throws Exception {
         mockMvc.perform(get("/users/1000/friends")
                         .accept(MediaType.APPLICATION_JSON))
@@ -338,6 +358,7 @@ public class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext
     void getUserById_notFound() throws Exception {
         mockMvc.perform(get("/users/1001")
                         .accept(MediaType.APPLICATION_JSON))
@@ -345,9 +366,39 @@ public class UserControllerTest {
     }
 
     @Test
+    @DirtiesContext
     void addUser_duplicatedEmail_badRequest() throws Exception {
         String userJson = jsonString(
-                "Login1",
+                CORRECT_LOGIN,
+                CORRECT_NAME,
+                CORRECT_EMAIL,
+                CORRECT_BIRTHDAY
+        );
+
+        String userDuplicateJson = jsonString(
+                UPDATE_LOGIN,
+                UPDATE_NAME,
+                CORRECT_EMAIL,
+                UPDATE_BIRTHDAY
+        );
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userDuplicateJson))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DirtiesContext
+    void updateUser_duplicatedEmail_badRequest() throws Exception {
+        addUserToDB(1);
+
+        String userJson = jsonString(
+                CORRECT_LOGIN,
                 CORRECT_NAME,
                 CORRECT_EMAIL,
                 CORRECT_BIRTHDAY
@@ -356,12 +407,9 @@ public class UserControllerTest {
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson))
-                .andExpect(status().isBadRequest());
-    }
+                .andExpect(status().isCreated());
 
-    @Test
-    void updateUser_duplicatedEmail_badRequest() throws Exception {
-        String userJson = jsonUpdateString(
+        String userUpdateJson = jsonUpdateString(
                 1,
                 UPDATE_LOGIN,
                 UPDATE_NAME,
@@ -371,9 +419,10 @@ public class UserControllerTest {
 
         mockMvc.perform(put("/users")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(userJson))
+                        .content(userUpdateJson))
                 .andExpect(status().isBadRequest());
     }
+
 
     private String jsonUpdateString(int id, String login, String name, String email, LocalDate birthday) {
         return String.format("{\"id\":%d," +
@@ -390,5 +439,18 @@ public class UserControllerTest {
                         "\"email\":\"%s\"," +
                         "\"birthday\":\"%s\"}",
                 login, name, email, birthday);
+    }
+
+    private void addUserToDB(int userNumber) throws Exception {
+        String userJson = jsonString(
+                "Login" + userNumber,
+                "Name" + userNumber,
+                "email" + userNumber + "@email.com",
+                LocalDate.of(1999, 12, 31));
+
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson))
+                .andExpect(status().isCreated());
     }
 }
