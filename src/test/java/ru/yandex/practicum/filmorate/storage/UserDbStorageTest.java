@@ -157,7 +157,7 @@ public class UserDbStorageTest {
     }
 
     @Test
-    public void testAddFriendUnconfirmed(){
+    public void testAddFriendUnconfirmed() {
         User createdUser = new User();
         createdUser.setLogin(UPDATE_LOGIN);
         createdUser.setName(UPDATE_NAME);
