@@ -1,7 +1,5 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -12,13 +10,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -29,8 +24,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
-
-    private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new JavaTimeModule());
 
     private static final String CORRECT_LOGIN = "Login";
     private static final String CORRECT_NAME = "Name";
@@ -113,15 +106,11 @@ public class UserControllerTest {
     @Test
     @Order(4)
     void getUsers_ok() throws Exception {
-        MvcResult result = mockMvc.perform(get("/users")
+        mockMvc.perform(get("/users")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        User[] users = MAPPER.readValue(result.getResponse().getContentAsString(), User[].class);
-
-        assertEquals(2, users.length);
+                .andExpect(jsonPath("$", hasSize(2)));
     }
 
     @Test
