@@ -1,0 +1,213 @@
+package ru.yandex.practicum.filmorate.storage.film;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.BaseRepository;
+import ru.yandex.practicum.filmorate.storage.mappers.MpaRowMapper;
+import ru.yandex.practicum.filmorate.util.FilmUtil;
+
+import java.sql.Date;
+import java.util.*;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Repository
+public class FilmDbStorage extends BaseRepository<Film> implements FilmStorage {
+    public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
+        super(jdbc, mapper);
+    }
+
+    private static final String FIND_ALL_FILMS_QUERY = "SELECT * FROM films";
+    private static final String FIND_FILM_BY_ID_QUERY = "SELECT * FROM films WHERE film_id = ?";
+    private static final String INSERT_FILM_QUERY =
+            "INSERT INTO films(name, description, release_date, duration, mpa_id) " +
+                    "VALUES (?, ?, ?, ?, ?)";
+    private static final String UPDATE_FILM_QUERY = "UPDATE films SET " +
+            "name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? " +
+            "WHERE film_id = ?";
+    private static final String DELETE_FILM_QUERY = "DELETE FROM films WHERE film_id = ?";
+    private static final String LIKES_FILM_QUERY = "SELECT user_id FROM likes WHERE film_id = ?";
+    private static final String GENRES_FILM_QUERY = "SELECT fg.genre_id, name FROM film_genres fg " +
+            "JOIN genres USING(genre_id) " +
+            "WHERE film_id = ?" +
+            "ORDER BY fg.genre_id";
+    private static final String ADD_LIKE_QUERY = "INSERT INTO likes(film_id, user_id) " +
+            "VALUES (?, ?)";
+    private static final String DELETE_LIKE_QUERY = "DELETE FROM likes WHERE film_id = ? AND user_id = ?";
+    private static final String FIND_POPULAR_QUERY = "SELECT * FROM films " +
+            "JOIN (SELECT film_id, COUNT(user_id) AS lks FROM likes GROUP BY film_id) AS l USING(film_id)" +
+            "ORDER BY lks DESC LIMIT ?";
+    private static final String ADD_GENRE_TO_FILM = "INSERT INTO film_genres (film_id, genre_id)" +
+            "VALUES(?, ?)";
+    private static final String DELETE_GENRE_BY_FILM = "DELETE FROM film_genres WHERE film_id = ?";
+    private static final String FIND_MPA_BY_ID = "SELECT * FROM mpa WHERE mpa_id = ?";
+
+    @Override
+    public Film create(Film film) {
+        long id = insert(
+                INSERT_FILM_QUERY,
+                film.getName(),
+                film.getDescription(),
+                Date.valueOf(film.getReleaseDate()),
+                film.getDuration(),
+                film.getMpa().getId()
+        );
+
+        film.setMpa(getMpa(film));
+        film.setId(id);
+
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            fillFilmGenres(film);
+            film.setGenres(getFilmGenres(film.getId()));
+        }
+
+        return film;
+    }
+
+    @Override
+    public Optional<Film> findById(Long id) {
+        Optional<Film> filmOptional = findOne(FIND_FILM_BY_ID_QUERY, id);
+
+        if (filmOptional.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Film film = filmOptional.get();
+
+        film.setLikes(getFilmLikes(id));
+        film.setGenres(getFilmGenres(id));
+        film.setMpa(getMpa(film));
+
+        return Optional.of(film);
+    }
+
+    @Override
+    public Collection<Film> findAll() {
+        return findMany(FIND_ALL_FILMS_QUERY)
+                .stream()
+                .map(film -> {
+                    film.setLikes(getFilmLikes(film.getId()));
+                    film.setGenres(getFilmGenres(film.getId()));
+                    film.setMpa(getMpa(film));
+                    return film;
+                })
+                .toList();
+    }
+
+    @Override
+    public Optional<Film> update(Film newFilm) {
+        Optional<Film> oldFilmOptional = findById(newFilm.getId());
+        if (oldFilmOptional.isPresent()) {
+            Film updatedFilm = FilmUtil.filmFieldsUpdate(oldFilmOptional.get(), newFilm);
+
+            update(
+                    UPDATE_FILM_QUERY,
+                    updatedFilm.getName(),
+                    updatedFilm.getDescription(),
+                    Date.valueOf(updatedFilm.getReleaseDate()),
+                    updatedFilm.getDuration(),
+                    updatedFilm.getMpa().getId(),
+                    updatedFilm.getId()
+            );
+
+            updatedFilm.setLikes(getFilmLikes(updatedFilm.getId()));
+
+            if (newFilm.getGenres() != null && !newFilm.getGenres().isEmpty()) {
+                deleteFilmGenres(updatedFilm);
+                fillFilmGenres(updatedFilm);
+                updatedFilm.setGenres(getFilmGenres(updatedFilm.getId()));
+            }
+
+            return Optional.of(updatedFilm);
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<Film> removeById(Long id) {
+        Optional<Film> deletedFilmOptional = findById(id);
+        delete(DELETE_FILM_QUERY, id);
+        return deletedFilmOptional;
+    }
+
+    @Override
+    public Film addLike(Film film, User user) {
+        jdbc.update(
+                ADD_LIKE_QUERY,
+                film.getId(),
+                user.getId()
+        );
+        film.getLikes().add(user.getId());
+        return film;
+    }
+
+    @Override
+    public Film removeLike(Film film, User user) {
+        delete(
+                DELETE_LIKE_QUERY,
+                film.getId(),
+                user.getId()
+        );
+        film.getLikes().remove(user.getId());
+        return film;
+    }
+
+    @Override
+    public Collection<Film> findPopular(Integer limit) {
+        return findMany(FIND_POPULAR_QUERY, limit).stream()
+                .map(film -> {
+                    film.setLikes(getFilmLikes(film.getId()));
+                    film.setGenres(getFilmGenres(film.getId()));
+                    film.setMpa(getMpa(film));
+                    return film;
+                })
+                .toList();
+    }
+
+    private Set<Long> getFilmLikes(Long id) {
+        return jdbc.queryForList(LIKES_FILM_QUERY, id)
+                .stream()
+                .map(x -> ((Number) x.get("user_id")).longValue())
+                .collect(Collectors.toSet());
+    }
+
+    private Set<Genre> getFilmGenres(Long filmId) {
+        return jdbc.queryForList(GENRES_FILM_QUERY, filmId)
+                .stream()
+                .map(x -> {
+                    Genre genre = new Genre();
+                    genre.setId((Integer) x.get("genre_id"));
+                    genre.setName(x.get("name").toString());
+                    return genre;
+                })
+                .collect(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparingInt(Genre::getId))));
+    }
+
+    private Set<Genre> fillFilmGenres(Film film) {
+        for (Genre genre : film.getGenres()) {
+            jdbc.update(ADD_GENRE_TO_FILM, film.getId(), genre.getId());
+        }
+        return film.getGenres();
+    }
+
+    private void deleteFilmGenres(Film film) {
+        jdbc.update(DELETE_GENRE_BY_FILM, film.getId());
+    }
+
+    private Mpa getMpa(Film film) {
+        try {
+            if (film.getMpa() == null) return null;
+            return jdbc.queryForObject(FIND_MPA_BY_ID, new MpaRowMapper(), film.getMpa().getId());
+        } catch (EmptyResultDataAccessException ignored) {
+            return null;
+        }
+    }
+}

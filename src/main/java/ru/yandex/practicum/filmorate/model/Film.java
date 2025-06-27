@@ -10,14 +10,18 @@ import org.springframework.format.annotation.DateTimeFormat;
 import ru.yandex.practicum.filmorate.validator.constraints.DateAfter;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 @Data
 @Slf4j
 public class Film {
     private Long id;
-    private final Set<Long> likes = new HashSet<>();
+    private Set<Long> likes = new HashSet<>();
+    private Set<Genre> genres = new TreeSet<>(Comparator.comparingInt(Genre::getId));
+    private Mpa mpa;
 
     @NotBlank(message = "Название не может быть пустым")
     private String name;

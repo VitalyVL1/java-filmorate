@@ -3,100 +3,108 @@ package ru.yandex.practicum.filmorate.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
+import java.time.LocalDate;
+
 import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-
-import java.time.LocalDate;
-
+@AutoConfigureTestDatabase
+@AutoConfigureMockMvc
+@SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@WebMvcTest(FilmController.class)
-@ComponentScan(basePackages = "ru.yandex.practicum.filmorate")
 public class FilmControllerTest {
-    private static final String CORRECT_NAME = "Toy Story";
-    private static final String CORRECT_DESCRIPTION = "Good movie";
-    private static final LocalDate CORRECT_RELEASE_DATE = LocalDate.of(1995, 1, 1);
-    private static final Integer CORRECT_DURATION = 90;
-
-    private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new JavaTimeModule());
-
-    private static final String INCORRECT_DESCRIPTION = "Good movie".repeat(200);
-    private static final LocalDate INCORRECT_RELEASE_DATE = LocalDate.of(1895, 1, 1);
-    private static final Integer INCORRECT_DURATION = -90;
-
-    private static final String UPDATE_NAME = "UPDATE_Toy Story";
-    private static final String UPDATE_DESCRIPTION = "UPDATE_Good movie";
-    private static final LocalDate UPDATE_RELEASE_DATE = LocalDate.of(1995, 11, 19);
-    private static final Integer UPDATE_DURATION = 81;
-
     @Autowired
     private MockMvc mockMvc;
 
+    private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new JavaTimeModule());
+
+    private static final String CORRECT_NAME = "Name";
+    private static final String CORRECT_DESCRIPTION = "Description";
+    private static final LocalDate CORRECT_RELEASE_DATE = LocalDate.of(1995, 1, 1);
+    private static final int CORRECT_DURATION = 100;
+    private static final int CORRECT_MPA_ID = 1;
+    private static final int CORRECT_GENRE_ID1 = 1;
+    private static final int CORRECT_GENRE_ID2 = 2;
+
+    private static final String INCORRECT_DESCRIPTION = "Description".repeat(200);
+    private static final LocalDate INCORRECT_RELEASE_DATE = LocalDate.of(1895, 1, 1);
+    private static final int INCORRECT_DURATION = -90;
+    private static final int INCORRECT_MPA_ID = 100;
+    private static final int INCORRECT_GENRE_ID = 100;
+
+    private static final String UPDATE_NAME = "UPDATE_Name";
+    private static final String UPDATE_DESCRIPTION = "UPDATE_Description";
+    private static final LocalDate UPDATE_RELEASE_DATE = LocalDate.of(2000, 12, 31);
+    private static final int UPDATE_DURATION = 200;
+    private static final int UPDATE_MPA_ID = 2;
+    private static final int UPDATE_GENRE_ID = 3;
+
     @Test
     @Order(1)
-    void addFilm_allFieldsOk() throws Exception {
-        Film film = new Film();
-        film.setName(CORRECT_NAME);
-        film.setDescription(CORRECT_DESCRIPTION);
-        film.setReleaseDate(CORRECT_RELEASE_DATE);
-        film.setDuration(CORRECT_DURATION);
+    void addFilm_OK() throws Exception {
+        String filmJson = jsonString(
+                CORRECT_NAME,
+                CORRECT_DESCRIPTION,
+                CORRECT_RELEASE_DATE,
+                CORRECT_DURATION,
+                CORRECT_MPA_ID,
+                CORRECT_GENRE_ID1
+        );
 
-        String userJson = MAPPER.writeValueAsString(film);
-
-        MvcResult result = mockMvc.perform(post("/films")
+        mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(userJson))
+                        .content(filmJson))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        Film responseFilm = MAPPER.readValue(result.getResponse().getContentAsString(), Film.class);
-
-        assertEquals(CORRECT_NAME, responseFilm.getName());
-        assertEquals(CORRECT_DESCRIPTION, responseFilm.getDescription());
-        assertEquals(CORRECT_RELEASE_DATE, responseFilm.getReleaseDate());
-        assertEquals(CORRECT_DURATION, responseFilm.getDuration());
-        assertEquals(1, responseFilm.getId());
+                .andExpect(jsonPath("$.name", is(CORRECT_NAME)))
+                .andExpect(jsonPath("$.description", is(CORRECT_DESCRIPTION)))
+                .andExpect(jsonPath("$.releaseDate", is(CORRECT_RELEASE_DATE.toString())))
+                .andExpect(jsonPath("$.duration", is(CORRECT_DURATION)))
+                .andExpect(jsonPath("$.mpa.id", is(CORRECT_MPA_ID)))
+                .andExpect(jsonPath("$.genres[0].id", is(CORRECT_GENRE_ID1)));
     }
 
     @Test
     @Order(2)
     void updateFilm_allFieldsOk() throws Exception {
-        Film film = new Film();
-        film.setId(1L);
-        film.setName(UPDATE_NAME);
-        film.setDescription(UPDATE_DESCRIPTION);
-        film.setReleaseDate(UPDATE_RELEASE_DATE);
-        film.setDuration(UPDATE_DURATION);
+        String filmJson = jsonUpdateString(
+                1,
+                UPDATE_NAME,
+                UPDATE_DESCRIPTION,
+                UPDATE_RELEASE_DATE,
+                UPDATE_DURATION,
+                UPDATE_MPA_ID,
+                UPDATE_GENRE_ID
+        );
 
-        String userJson = MAPPER.writeValueAsString(film);
-
-        MvcResult result = mockMvc.perform(put("/films")
+        mockMvc.perform(put("/films")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(userJson))
+                        .content(filmJson))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        Film responseFilm = MAPPER.readValue(result.getResponse().getContentAsString(), Film.class);
-
-        assertEquals(UPDATE_NAME, responseFilm.getName());
-        assertEquals(UPDATE_DESCRIPTION, responseFilm.getDescription());
-        assertEquals(UPDATE_RELEASE_DATE, responseFilm.getReleaseDate());
-        assertEquals(UPDATE_DURATION, responseFilm.getDuration());
-        assertEquals(1, responseFilm.getId());
+                .andExpect(jsonPath("$.name", is(UPDATE_NAME)))
+                .andExpect(jsonPath("$.description", is(UPDATE_DESCRIPTION)))
+                .andExpect(jsonPath("$.releaseDate", is(UPDATE_RELEASE_DATE.toString())))
+                .andExpect(jsonPath("$.duration", is(UPDATE_DURATION)))
+                .andExpect(jsonPath("$.mpa.id", is(UPDATE_MPA_ID)))
+                .andExpect(jsonPath("$.genres[0].id", is(UPDATE_GENRE_ID)));
     }
 
     @Test
@@ -179,99 +187,165 @@ public class FilmControllerTest {
     }
 
     @Test
+    void addFilm_multiple_genre_OK() throws Exception {
+        String filmJson = jsonTwoGenersString(
+                CORRECT_NAME,
+                CORRECT_DESCRIPTION,
+                CORRECT_RELEASE_DATE,
+                CORRECT_DURATION,
+                CORRECT_MPA_ID,
+                CORRECT_GENRE_ID1,
+                CORRECT_GENRE_ID2
+        );
+
+        mockMvc.perform(post("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(filmJson))
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.name", is(CORRECT_NAME)))
+                .andExpect(jsonPath("$.description", is(CORRECT_DESCRIPTION)))
+                .andExpect(jsonPath("$.releaseDate", is(CORRECT_RELEASE_DATE.toString())))
+                .andExpect(jsonPath("$.duration", is(CORRECT_DURATION)))
+                .andExpect(jsonPath("$.mpa.id", is(CORRECT_MPA_ID)))
+                .andExpect(jsonPath("$.genres[0].id", is(CORRECT_GENRE_ID1)))
+                .andExpect(jsonPath("$.genres[1].id", is(CORRECT_GENRE_ID2)));
+    }
+
+    @Test
     void addFilm_blankName_badRequest() throws Exception {
-        Film film = new Film();
-        film.setName("");
-        film.setDescription(CORRECT_DESCRIPTION);
-        film.setReleaseDate(CORRECT_RELEASE_DATE);
-        film.setDuration(CORRECT_DURATION);
-
-        String userJson = MAPPER.writeValueAsString(film);
+        String filmJson = jsonString(
+                "",
+                CORRECT_DESCRIPTION,
+                CORRECT_RELEASE_DATE,
+                CORRECT_DURATION,
+                CORRECT_MPA_ID,
+                CORRECT_GENRE_ID1
+        );
 
         mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(userJson))
+                        .content(filmJson))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    void addFilm_incorrectDescription_badRequest() throws Exception {
-        Film film = new Film();
-        film.setName(CORRECT_NAME);
-        film.setDescription(INCORRECT_DESCRIPTION);
-        film.setReleaseDate(CORRECT_RELEASE_DATE);
-        film.setDuration(CORRECT_DURATION);
-
-        String userJson = MAPPER.writeValueAsString(film);
+    void addFilm_failDescription_badRequest() throws Exception {
+        String filmJson = jsonString(
+                CORRECT_NAME,
+                INCORRECT_DESCRIPTION,
+                CORRECT_RELEASE_DATE,
+                CORRECT_DURATION,
+                CORRECT_MPA_ID,
+                CORRECT_GENRE_ID1
+        );
 
         mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(userJson))
+                        .content(filmJson))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    void addFilm_incorrectReleaseDate_badRequest() throws Exception {
-        Film film = new Film();
-        film.setName(CORRECT_NAME);
-        film.setDescription(CORRECT_DESCRIPTION);
-        film.setReleaseDate(INCORRECT_RELEASE_DATE);
-        film.setDuration(CORRECT_DURATION);
-
-        String userJson = MAPPER.writeValueAsString(film);
+    void addFilm_failReleaseDate_badRequest() throws Exception {
+        String filmJson = jsonString(
+                CORRECT_NAME,
+                CORRECT_DESCRIPTION,
+                INCORRECT_RELEASE_DATE,
+                CORRECT_DURATION,
+                CORRECT_MPA_ID,
+                CORRECT_GENRE_ID1
+        );
 
         mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(userJson))
+                        .content(filmJson))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    void addFilm_incorrectDuration_badRequest() throws Exception {
-        Film film = new Film();
-        film.setName(CORRECT_NAME);
-        film.setDescription(CORRECT_DESCRIPTION);
-        film.setReleaseDate(CORRECT_RELEASE_DATE);
-        film.setDuration(INCORRECT_DURATION);
-
-        String userJson = MAPPER.writeValueAsString(film);
+    void addFilm_failDuration_badRequest() throws Exception {
+        String filmJson = jsonString(
+                CORRECT_NAME,
+                CORRECT_DESCRIPTION,
+                CORRECT_RELEASE_DATE,
+                INCORRECT_DURATION,
+                CORRECT_MPA_ID,
+                CORRECT_GENRE_ID1
+        );
 
         mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(userJson))
+                        .content(filmJson))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void addFilm_failMpa_notFound() throws Exception {
+        String filmJson = jsonString(
+                CORRECT_NAME,
+                CORRECT_DESCRIPTION,
+                CORRECT_RELEASE_DATE,
+                CORRECT_DURATION,
+                INCORRECT_MPA_ID,
+                CORRECT_GENRE_ID1
+        );
+
+        mockMvc.perform(post("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(filmJson))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void addFilm_failGenre_notFound() throws Exception {
+        String filmJson = jsonString(
+                CORRECT_NAME,
+                CORRECT_DESCRIPTION,
+                CORRECT_RELEASE_DATE,
+                CORRECT_DURATION,
+                CORRECT_MPA_ID,
+                INCORRECT_GENRE_ID
+        );
+
+        mockMvc.perform(post("/films")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(filmJson))
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void updateFilm_noSuchFilm_notFound() throws Exception {
-        Film film = new Film();
-        film.setId(1000L);
-        film.setName(CORRECT_NAME);
-        film.setDescription(CORRECT_DESCRIPTION);
-        film.setReleaseDate(CORRECT_RELEASE_DATE);
-        film.setDuration(CORRECT_DURATION);
-
-        String userJson = MAPPER.writeValueAsString(film);
+        String filmJson = jsonUpdateString(
+                1000,
+                UPDATE_NAME,
+                UPDATE_DESCRIPTION,
+                UPDATE_RELEASE_DATE,
+                UPDATE_DURATION,
+                UPDATE_MPA_ID,
+                UPDATE_GENRE_ID
+        );
 
         mockMvc.perform(put("/films")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(userJson))
+                        .content(filmJson))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void updateFilm_noId_badRequest() throws Exception {
-        Film film = new Film();
-        film.setName(CORRECT_NAME);
-        film.setDescription(CORRECT_DESCRIPTION);
-        film.setReleaseDate(CORRECT_RELEASE_DATE);
-        film.setDuration(CORRECT_DURATION);
-
-        String userJson = MAPPER.writeValueAsString(film);
+        String filmJson = jsonString(
+                CORRECT_NAME,
+                CORRECT_DESCRIPTION,
+                CORRECT_RELEASE_DATE,
+                CORRECT_DURATION,
+                CORRECT_MPA_ID,
+                CORRECT_GENRE_ID1
+        );
 
         mockMvc.perform(put("/films")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(userJson))
+                        .content(filmJson))
                 .andExpect(status().isBadRequest());
     }
 
@@ -299,17 +373,18 @@ public class FilmControllerTest {
     }
 
     private void addFilm(int number) throws Exception {
-        Film film = new Film();
-        film.setName("Film_name" + number);
-        film.setDescription("Film_description" + number);
-        film.setReleaseDate(CORRECT_RELEASE_DATE);
-        film.setDuration(CORRECT_DURATION);
-
-        String userJson = MAPPER.writeValueAsString(film);
+        String filmJson = jsonString(
+                "Name" + number,
+                "Description" + number,
+                CORRECT_RELEASE_DATE,
+                CORRECT_DURATION,
+                CORRECT_MPA_ID,
+                CORRECT_GENRE_ID1
+        );
 
         mockMvc.perform(post("/films")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(userJson))
+                        .content(filmJson))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
@@ -319,5 +394,36 @@ public class FilmControllerTest {
         mockMvc.perform(put(uri))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    private String jsonString(String name, String description, LocalDate releaseDate, int duration, int mpaId, int genreId) {
+        return String.format("{\"name\":\"%s\"," +
+                        "\"description\":\"%s\"," +
+                        "\"releaseDate\":\"%s\"," +
+                        "\"duration\":%d," +
+                        "\"mpa\":{\"id\":%d}," +
+                        "\"genres\":[{\"id\":%d}]}",
+                name, description, releaseDate, duration, mpaId, genreId);
+    }
+
+    private String jsonUpdateString(int id, String name, String description, LocalDate releaseDate, int duration, int mpaId, int genreId) {
+        return String.format("{\"id\":\"%d\"," +
+                        "\"name\":\"%s\"," +
+                        "\"description\":\"%s\"," +
+                        "\"releaseDate\":\"%s\"," +
+                        "\"duration\":%d," +
+                        "\"mpa\":{\"id\":%d}," +
+                        "\"genres\":[{\"id\":%d}]}",
+                id, name, description, releaseDate, duration, mpaId, genreId);
+    }
+
+    private String jsonTwoGenersString(String name, String description, LocalDate releaseDate, int duration, int mpaId, int genreId1, int genreId2) {
+        return String.format("{\"name\":\"%s\"," +
+                        "\"description\":\"%s\"," +
+                        "\"releaseDate\":\"%s\"," +
+                        "\"duration\":%d," +
+                        "\"mpa\":{\"id\":%d}," +
+                        "\"genres\":[{\"id\":%d},{\"id\": %d}]}",
+                name, description, releaseDate, duration, mpaId, genreId1, genreId2);
     }
 }
